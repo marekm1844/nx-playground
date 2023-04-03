@@ -11,6 +11,12 @@
       "options": {
         "target": "node",
         "compiler": "tsc",
+        "additionalEntryPoints": [
+          {
+            "entryName": "console",
+            "entryPath": "apps/nx-nest-playground/src/console.ts"
+          }
+        ],
         "outputPath": "dist/apps/nx-nest-playground",
         "main": "apps/nx-nest-playground/src/main.ts",
         "tsConfig": "apps/nx-nest-playground/tsconfig.app.json",
@@ -38,6 +44,13 @@
         }
       }
     },
+    "console": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "TS_NODE_PROJECT=apps/nx-nest-playground/tsconfig.app.json ts-node  -r tsconfig-paths/register ./apps/nx-nest-playground/src/console.ts"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
@@ -50,15 +63,11 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/nx-nest-playground/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
+        "passWithNoTests": true,
+        "codeCoverage": false
       }
     }
   },
+
   "tags": []
 }
