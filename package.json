@@ -5,17 +5,21 @@
   "scripts": {
     "console": "node dist/src/console",
     "start": "nx serve nx-nest-playground",
-    "test": "nx run-many --target=test --parallel=2 --all --code-coverage --maxWorkers=2",
-    "seed": "nest seed --env=development"
+    "test": "nx run nx-nest-playground:test",
+    "seed": "nx run nx-nest-playground:console seed",
+    "build": "nx build nx-nest-playground"
   },
   "private": true,
   "dependencies": {
+    "@nestjs/cache-manager": "^1.0.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.3.1",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/typeorm": "9.0.1",
     "axios": "^1.0.0",
+    "cache-manager": "^5.2.0",
+    "cache-manager-redis-yet": "^4.1.1",
     "nestjs-console": "^8.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.0.0",
@@ -25,6 +29,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
+    "@golevelup/ts-jest": "^0.3.5",
     "@nestjs/cli": "^9.3.0",
     "@nestjs/schematics": "^9.0.4",
     "@nestjs/testing": "^9.0.0",
