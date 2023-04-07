@@ -37,6 +37,7 @@
       },
       "configurations": {
         "development": {
+          "inspect": "inspect",
           "buildTarget": "nx-nest-playground:build:development"
         },
         "production": {
