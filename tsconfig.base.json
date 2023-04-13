@@ -16,9 +16,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@nx-playground/util/util-my-lib-name": [
-        "libs/util/util-my-lib-name/src/index.ts"
-      ]
+      "@nx-playground/util/util-my-lib-name": ["libs/util/util-my-lib-name/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

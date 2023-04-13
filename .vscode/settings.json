@@ -4,5 +4,7 @@
         "nestjs",
         "nrwl",
         "typeorm"
-    ]
+    ],
+    "typescript.suggest.paths": false,
+    "javascript.suggest.paths": false 
 }
