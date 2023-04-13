@@ -11,4 +11,9 @@ export class UptrendCorpseCompareRule implements IRule  {
      const  lastIndex = candles.length - 1;
      return  candles[lastIndex].maximumCorpse > candles[lastIndex - 1].maximumCorpse;
   }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getRuleType(): { new (...args: any[]): IRule } {
+      return UptrendCorpseCompareRule;
+    } 
 }
