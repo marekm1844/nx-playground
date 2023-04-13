@@ -3,10 +3,10 @@
   "configurations": [
       {
           "name": "Debug Backend",
-          "type": "ode",
+          "type": "node",
           "request": "launch",
           "args": [
-            "apps/szejk-waves/src/main.ts"
+            "apps/trading-waves/src/main.ts"
           ],
           "runtimeArgs": [
             "--require",
@@ -15,12 +15,12 @@
             "tsconfig-paths/register",
           ],
           "cwd": "${workspaceRoot}",
-          "envFile": "${workspaceFolder}/apps/szejk-waves/.env",
+          "envFile": "${workspaceFolder}/apps/trading-waves/.env",
           "internalConsoleOptions": "openOnSessionStart",
           "env": {
             "NODE_ENV": "local",
             "NODE_PORT": "3000",
-            "TS_NODE_PROJECT": "apps/szejk-waves/tsconfig.app.json", // Specify the tsconfig to use
+            "TS_NODE_PROJECT": "apps/trading-waves/tsconfig.app.json", // Specify the tsconfig to use
           },
           "sourceMaps": true,
           "console": "internalConsole",

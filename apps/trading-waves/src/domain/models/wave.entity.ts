@@ -11,12 +11,8 @@ export class Wave {
     this.candles.push(candle);
   }
 
-  isLatestUptrend(): boolean {
-    if (this.candles.length < 2) {
-      return false;
-    }
-
-    const lastIndex = this.candles.length - 1;
-    return this.candles[lastIndex].maximumCorpse > this.candles[lastIndex - 1].maximumCorpse;
+  getCandles(): Candle[] {
+    return this.candles;
   }
+
 }
