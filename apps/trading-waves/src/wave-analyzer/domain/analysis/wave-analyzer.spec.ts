@@ -31,7 +31,7 @@ describe('WaveAnalyzer', () => {
                 completed: true,
               });
               const candle2 = new Candle({
-                openTime: Date.now(),
+                openTime: Date.now()+ 60000,
                 open: '105',
                 high: '120',
                 low: '95',

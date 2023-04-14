@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Wave } from '../models/wave.entity';
 import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
 import { IRule } from '../rules/rule.interface';
-import { UptrendCorpseCompareRule } from '../rules/uptrend-corpse-compare-rule';
+
 
 @Injectable()
 export class WaveAnalyzer {
@@ -30,9 +30,8 @@ export class WaveAnalyzer {
         this.rules
         .filter((rule) => rule.evaluate(this.wave.getCandles()))
         .forEach((rule) => {
-          if (rule.getRuleType() === UptrendCorpseCompareRule) {
-            console.log('Uptrend wave detected');
-          }
+          Logger.log('rule detected  and passed');
+
           // Add other rule types here with additional conditions
         });
 

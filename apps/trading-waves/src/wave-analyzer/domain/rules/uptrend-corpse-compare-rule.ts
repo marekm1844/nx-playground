@@ -1,7 +1,8 @@
 import { Candle } from "../models/candle.entity";
+import { BaseRule } from "./base-rule";
 import { IRule } from "./rule.interface";
 
-export class UptrendCorpseCompareRule implements IRule  {
+export class UptrendCorpseCompareRule extends BaseRule  {
 
    evaluate(candles: Candle[]): boolean {
      if (candles.length < 2) {
