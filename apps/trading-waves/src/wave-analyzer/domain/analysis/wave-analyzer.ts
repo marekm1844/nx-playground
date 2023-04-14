@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Wave } from '../models/wave.entity';
-import { ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
+import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
 import { IRule } from '../rules/rule.interface';
 import { UptrendCorpseCompareRule } from '../rules/uptrend-corpse-compare-rule';
 
@@ -9,7 +9,7 @@ export class WaveAnalyzer {
   private wave: Wave;
   private rules: IRule[] = [];
 
-  constructor(private readonly candleDataProvider: ICandleDataProvider) {
+  constructor(@Inject(CANDLE_DATA_PROVIDER)  private readonly candleDataProvider: ICandleDataProvider) {
     this.wave = new Wave();
   }
 
@@ -23,10 +23,11 @@ export class WaveAnalyzer {
 
   async analyze(symbol: string, interval: string): Promise<void> {
     for await (const candle of this.candleDataProvider.candles(symbol, interval)) {
-      this.wave.addCandle(candle);
-
-      //execute rules
-      this.rules
+      
+      if (this.wave.addCandle(candle)){
+        
+        //execute rules
+        this.rules
         .filter((rule) => rule.evaluate(this.wave.getCandles()))
         .forEach((rule) => {
           if (rule.getRuleType() === UptrendCorpseCompareRule) {
@@ -35,6 +36,21 @@ export class WaveAnalyzer {
           // Add other rule types here with additional conditions
         });
 
+
+        //log 5 last candles from wave using Logger and display only open and close price, high and low price
+        Logger.log(this.wave.getCandles().slice(-5).map((candle) => {
+          return {
+            openTime: candle.openTime,
+            open: candle.open,
+            close: candle.close,
+            high: candle.high,
+            low: candle.low,
+            completed: candle.completed,
+          }
+        }));
+
+      }
+     
     }
   }
 

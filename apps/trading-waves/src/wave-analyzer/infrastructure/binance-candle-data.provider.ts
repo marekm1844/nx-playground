@@ -16,6 +16,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
   async *candles(symbol: string, interval: string): AsyncIterableIterator<Candle> {
     const stream = `${symbol.toLowerCase()}@kline_${interval}`;
     this.ws = new WebSocket(`${this.binanceWebSocketUrl}/${stream}`);
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const messageQueue: string[] = [];
     let resolve: ((value: Candle | PromiseLike<Candle>) => void) | null = null;
@@ -38,6 +39,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
           takerBuyBaseAssetVolume: candleData.V,
           takerBuyQuoteAssetVolume: candleData.Q,
           ignore: candleData.B,
+          completed: candleData.x,
         });
 
         resolve(candle);
@@ -66,6 +68,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
           takerBuyBaseAssetVolume: candleData.V,
           takerBuyQuoteAssetVolume: candleData.Q,
           ignore: candleData.B,
+          completed: candleData.x,
         });
 
         yield candle;
@@ -74,6 +77,9 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
           resolve = r;
         });
       }
+
+       // Wait for 30 seconds before fetching the next candle
+       //await delay(30000);
     }
   }
 

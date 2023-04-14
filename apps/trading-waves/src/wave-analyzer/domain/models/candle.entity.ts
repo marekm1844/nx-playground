@@ -46,6 +46,9 @@ export class Candle {
   @Column()
   ignore: number;
 
+  @Column( {type:'boolean'})
+  completed: boolean;
+
   color: CandleColor;
 
   maximumCorpse: number;
@@ -64,6 +67,7 @@ export class Candle {
     takerBuyBaseAssetVolume: string;
     takerBuyQuoteAssetVolume: string;
     ignore: number;
+    completed: boolean;
   }) {
     if (data) {
       this.openTime = new Date(data.openTime);
@@ -78,6 +82,7 @@ export class Candle {
       this.takerBuyBaseAssetVolume = parseFloat(data.takerBuyBaseAssetVolume);
       this.takerBuyQuoteAssetVolume = parseFloat(data.takerBuyQuoteAssetVolume);
       this.ignore = data.ignore;
+      this.completed = data.completed;
       this.color = this.close > this.open ? CandleColor.Green : CandleColor.Red;
       this.maximumCorpse = this.close > this.open ? this.close : this.open;
       this.minimumCorpse = this.close > this.open ? this.open : this.close;

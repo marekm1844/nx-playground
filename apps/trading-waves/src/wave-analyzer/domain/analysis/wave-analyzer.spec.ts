@@ -28,6 +28,7 @@ describe('WaveAnalyzer', () => {
                 takerBuyBaseAssetVolume: '500',
                 takerBuyQuoteAssetVolume: '52500',
                 ignore: 0,
+                completed: true,
               });
               const candle2 = new Candle({
                 openTime: Date.now(),
@@ -42,6 +43,7 @@ describe('WaveAnalyzer', () => {
                 takerBuyBaseAssetVolume: '600',
                 takerBuyQuoteAssetVolume: '66000',
                 ignore: 0,
+                completed: true,
               });
 
           yield candle1;

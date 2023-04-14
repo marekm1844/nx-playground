@@ -7,6 +7,7 @@
     "start": "nx serve nx-nest-playground",
     "test": "nx run nx-nest-playground:test",
     "test-waves": "nx run trading-waves:test",
+    "start-waves": "nx serve trading-waves",
     "seed": "nx run nx-nest-playground:console seed",
     "build": "nx build nx-nest-playground"
   },
