@@ -2,13 +2,14 @@
 
 import { ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
 import { Candle } from '../models/candle.entity';
+import { BaseRule } from '../rules/base-rule';
 import { IRule } from '../rules/rule.interface';
 import { UptrendCorpseCompareRule } from '../rules/uptrend-corpse-compare-rule';
 import { WaveAnalyzer } from './wave-analyzer';
 
 describe('WaveAnalyzer', () => {
     let candleDataProvider: ICandleDataProvider;
-    let rules: IRule[];
+    let rules: BaseRule[];
     let waveAnalyzer: WaveAnalyzer;
   
     beforeEach(() => {

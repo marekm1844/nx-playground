@@ -22,7 +22,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     let resolve: ((value: Candle | PromiseLike<Candle>) => void) | null = null;
 
     this.ws.on('message', (message: string) => {
-      if (resolve) {
+      
         const data = JSON.parse(message);
         const candleData = data.k;
 
@@ -42,11 +42,15 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
           completed: candleData.x,
         });
 
+      if (candle.completed) {
+            
+      if (resolve) {
         resolve(candle);
         resolve = null;
       } else {
         messageQueue.push(message);
       }
+    }
     });
 
     while (true) {
@@ -71,15 +75,14 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
           completed: candleData.x,
         });
 
-        yield candle;
+        if (candle.completed) {
+          yield candle;
+        }
       } else {
         yield new Promise<Candle>((r) => {
           resolve = r;
         });
       }
-
-       // Wait for 30 seconds before fetching the next candle
-       //await delay(30000);
     }
   }
 
