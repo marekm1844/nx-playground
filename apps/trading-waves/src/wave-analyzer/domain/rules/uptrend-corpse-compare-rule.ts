@@ -1,20 +1,26 @@
-import { Candle } from "../models/candle.entity";
+import { DowntrendWaveType } from "../analysis/downtrend-wave-type";
+import { UptrendWaveType } from "../analysis/uptrend-wave-type";
+import { WaveType } from "../analysis/wave-type.enum";
+import { IWaveType } from "../analysis/wave-type.interface";
+import { Candle, CandleColor } from "../models/candle.entity";
 import { BaseRule } from "./base-rule";
-import { IRule } from "./rule.interface";
 
-export class UptrendCorpseCompareRule extends BaseRule  {
+export class UptrendCorpseCompareRule extends BaseRule{
 
-   evaluate(candles: Candle[]): boolean {
+  //! We don't need to check the type of the wave because it's first rule in the chain and to detect wave change 
+   evaluate(candles: Candle[], type: WaveType): boolean {
      if (candles.length < 2) {
        return  false ;
     }
 
+
      const  lastIndex = candles.length - 1;
-     return  candles[lastIndex].maximumCorpse > candles[lastIndex - 1].maximumCorpse;
+
+     return  candles[lastIndex].maximumCorpse >= candles[lastIndex - 1].maximumCorpse;
   }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getRuleType(): { new (...args: any[]): IRule } {
-      return UptrendCorpseCompareRule;
+    getRuleType() {
+      return WaveType.Uptrend;
     } 
 }

@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { Candle } from './candle.entity';
 import { WaveType } from '../analysis/wave-type.enum';
+import { IWaveType } from '../analysis/wave-type.interface';
 
 export class Wave {
   private candles: Candle[] = [];
@@ -20,6 +21,7 @@ export class Wave {
   //or if it is present but the candle data has changed 
   //and return true if the candle was added to the wave
   addCandle(newCandle: Candle): boolean {
+
     if (this.isCandlePresent(newCandle)) {
       //Logger.log(`Candle already present: ${JSON.stringify(newCandle)}`);
       this.candles = this.candles.map((candle) =>

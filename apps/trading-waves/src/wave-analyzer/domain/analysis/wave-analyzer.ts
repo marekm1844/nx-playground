@@ -2,23 +2,24 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Wave } from '../models/wave.entity';
 import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
 import { IRule } from '../rules/rule.interface';
-import { UptrendCorpseCompareRule } from '../rules/uptrend-corpse-compare-rule';
 import { WaveType } from './wave-type.enum';
-import { DowntrendCorpseCompareRule } from '../rules/downtrend-corpse-compare-rule';
 import { BaseRule } from '../rules/base-rule';
 import { Candle } from '../models/candle.entity';
+import { UptrendWaveType } from './uptrend-wave-type';
+import { DowntrendWaveType } from './downtrend-wave-type';
 
 
 @Injectable()
 export class WaveAnalyzer {
   private wave: Wave;
   private waves: Wave[] = [];
-  private rules: BaseRule[] = [];
+  private rules: IRule[] = [];
+  private ruleEvaluationCache: string[] = [];
 
-  constructor(@Inject(CANDLE_DATA_PROVIDER)  private readonly candleDataProvider: ICandleDataProvider) {
+    constructor(@Inject(CANDLE_DATA_PROVIDER)  private readonly candleDataProvider: ICandleDataProvider) {
   }
 
-  addRule(rule: BaseRule): void {
+  addRule(rule: IRule): void {
     this.rules.push(rule);
   }
 
@@ -33,6 +34,12 @@ export class WaveAnalyzer {
 
     for await (const candle of this.candleDataProvider.candles(symbol, interval)) {
 
+      //if no rules are added exit
+      if (this.rules.length === 0) {
+        Logger.log('No rules added');
+        return;
+      }
+
       if (!currentWave) {
         currentWave = new Wave(WaveType.Uptrend, candle);
         this.waves.push(currentWave);
@@ -46,31 +53,48 @@ export class WaveAnalyzer {
         //execute rules
         this.rules
         .forEach((rule) => {
-          if (rule.evaluate([lastCandleInCurrentWave, candle]))
+          if ( rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType()))
           {
-            if(rule.getRuleType() === UptrendCorpseCompareRule && currentWave.getType() === WaveType.Uptrend)
+            if (this.checkIfCandleExistsInCache(candle)) {
+              return;
+            }
+
+            if(rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Uptrend)
             {
+
               Logger.log('UptrendCorpseCompareRule detected in uptrend wave');
               currentWave.addCandle(candle);
               isUptrend = true;
+              
+              return;
+
             }
-            else if(rule.getRuleType() === DowntrendCorpseCompareRule && currentWave.getType() === WaveType.Downtrend)
+            else if(rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Downtrend)
             {
+ 
               Logger.log('DowntrendCorpseCompareRule detected in downtrend wave');
               currentWave.addCandle(candle);
               isUptrend = false;
+              
+              return;
             }
             else 
             {
               // If wave type has changed, create a new wave
               const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
+        
               currentWave = new Wave(newWaveType ,candle);
               this.waves.push(currentWave);
               console.log(`Start of ${currentWave.getType} wave at ${currentWave.getStartDateTime()}`);
+              
 
             }
             
           }
+          else  
+ 
+            
+
           Logger.log('rule detected  and passed');
 
           // Add other rule types here with additional conditions
@@ -91,5 +115,19 @@ export class WaveAnalyzer {
 
   stop(): void {
     this.candleDataProvider.close();
+  }
+
+  private checkIfCandleExistsInCache(candle1: Candle): boolean {
+    const cacheKey = `${candle1.openTime.getTime()}`;
+
+
+    if (!this.ruleEvaluationCache.includes(cacheKey)) {
+      this.ruleEvaluationCache.push(cacheKey);
+      return false;
+    }
+    else {    
+      return true;
+    }
+
   }
 }
