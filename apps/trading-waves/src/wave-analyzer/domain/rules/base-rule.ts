@@ -1,6 +1,5 @@
 
 import { WaveType } from "../analysis/wave-type.enum";
-import { IWaveType } from "../analysis/wave-type.interface";
 import { Candle } from "../models/candle.entity";
 import { IRule } from "./rule.interface";
 

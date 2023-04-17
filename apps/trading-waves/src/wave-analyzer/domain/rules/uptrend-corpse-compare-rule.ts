@@ -1,8 +1,5 @@
-import { DowntrendWaveType } from "../analysis/downtrend-wave-type";
-import { UptrendWaveType } from "../analysis/uptrend-wave-type";
 import { WaveType } from "../analysis/wave-type.enum";
-import { IWaveType } from "../analysis/wave-type.interface";
-import { Candle, CandleColor } from "../models/candle.entity";
+import { Candle } from "../models/candle.entity";
 import { BaseRule } from "./base-rule";
 
 export class UptrendCorpseCompareRule extends BaseRule{

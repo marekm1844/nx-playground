@@ -5,8 +5,6 @@ import { IRule } from '../rules/rule.interface';
 import { WaveType } from './wave-type.enum';
 import { BaseRule } from '../rules/base-rule';
 import { Candle } from '../models/candle.entity';
-import { UptrendWaveType } from './uptrend-wave-type';
-import { DowntrendWaveType } from './downtrend-wave-type';
 
 
 @Injectable()
@@ -62,7 +60,7 @@ export class WaveAnalyzer {
             if(rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Uptrend)
             {
 
-              Logger.log('UptrendCorpseCompareRule detected in uptrend wave');
+              Logger.log(`${rule.constructor.name}  detected in uptrend wave`);
               currentWave.addCandle(candle);
               isUptrend = true;
               
@@ -72,7 +70,7 @@ export class WaveAnalyzer {
             else if(rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Downtrend)
             {
  
-              Logger.log('DowntrendCorpseCompareRule detected in downtrend wave');
+              Logger.log(`Start ${rule.constructor.name}  detected in downtrend wave`);
               currentWave.addCandle(candle);
               isUptrend = false;
               
@@ -85,19 +83,12 @@ export class WaveAnalyzer {
         
               currentWave = new Wave(newWaveType ,candle);
               this.waves.push(currentWave);
-              console.log(`Start of ${currentWave.getType} wave at ${currentWave.getStartDateTime()}`);
+              console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
               
 
             }
             
           }
-          else  
- 
-            
-
-          Logger.log('rule detected  and passed');
-
-          // Add other rule types here with additional conditions
         });
 
 

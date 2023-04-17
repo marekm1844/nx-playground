@@ -1,7 +1,5 @@
-import { Logger } from '@nestjs/common';
 import { Candle } from './candle.entity';
 import { WaveType } from '../analysis/wave-type.enum';
-import { IWaveType } from '../analysis/wave-type.interface';
 
 export class Wave {
   private candles: Candle[] = [];
