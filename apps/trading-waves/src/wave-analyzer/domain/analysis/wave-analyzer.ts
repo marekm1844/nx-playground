@@ -39,7 +39,7 @@ export class WaveAnalyzer {
       }
 
       if (!currentWave) {
-        currentWave = new Wave(WaveType.Uptrend, candle);
+        currentWave = new Wave(WaveType.Uptrend, candle);        
         this.waves.push(currentWave);
         continue;
       }
@@ -57,7 +57,7 @@ export class WaveAnalyzer {
               return;
             }
 
-            if(rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Uptrend)
+            if((rule.getRuleType() === WaveType.Uptrend) && currentWave.getType() === WaveType.Uptrend)
             {
 
               Logger.log(`${rule.constructor.name}  detected in uptrend wave`);
@@ -67,13 +67,29 @@ export class WaveAnalyzer {
               return;
 
             }
-            else if(rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Downtrend)
+            else if((rule.getRuleType() === WaveType.Downtrend)  && currentWave.getType() === WaveType.Downtrend)
             {
  
               Logger.log(`Start ${rule.constructor.name}  detected in downtrend wave`);
               currentWave.addCandle(candle);
               isUptrend = false;
               
+              return;
+            }
+            else if (rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Downtrend)
+            {
+              Logger.log(`Start ${rule.constructor.name}  wave`);
+              currentWave.addCandle(candle);
+              currentWave = new Wave(WaveType.Uptrend  ,candle);
+              this.waves.push(currentWave);
+              return;
+            }
+            else if (rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Uptrend)
+            {
+              Logger.log(`Start ${rule.constructor.name}  wave`);
+              currentWave.addCandle(candle);
+              currentWave = new Wave(WaveType.Downtrend  ,candle);
+              this.waves.push(currentWave);
               return;
             }
             else 
@@ -95,7 +111,14 @@ export class WaveAnalyzer {
         //log number of waves and from last wave with number of candels in each wave and start date and type and log candle data as json
         Logger.log(`Number of waves: ${this.waves.length}`);
         Logger.log(`Last wave: ${this.waves.slice(-1)[0].getType()} with ${this.waves.slice(-1)[0].getCandles().length} candles`);
-        Logger.log(`Last candle: ${JSON.stringify(this.waves.slice(-1)[0].getCandles())}`);
+        Logger.log(`Last candle: ${JSON.stringify(this.waves.slice(-1)[0].getCandles().map((candle) =>({
+          open: candle.open,
+          close: candle.close,
+          low: candle.low,
+          high: candle.high
+        }))
+      )}`
+    );
 
 
 
