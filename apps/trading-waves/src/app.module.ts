@@ -1,15 +1,21 @@
 import { Module } from '@nestjs/common';
-
-import { AppController } from './app/app.controller';
-import { AppService } from './app/app.service';
 import { WaveAnalyzerModule } from './wave-analyzer/wave-analyzer.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { glob } from 'glob';
+import path from 'path';
 
 
 @Module({
   imports: [
-    WaveAnalyzerModule
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    WaveAnalyzerModule,
   ],
   controllers: [],
   providers: [ ],
 })
 export class AppModule {}
+
+

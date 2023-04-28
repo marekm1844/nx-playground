@@ -15,7 +15,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
 
   async *candles(symbol: string, interval: string): AsyncIterableIterator<Candle> {
     const stream = `${symbol.toLowerCase()}@kline_${interval}`;
-    this.ws = new WebSocket(`${this.binanceWebSocketUrl}/${stream}`);
+    this.connectWebSocket(`${this.binanceWebSocketUrl}/${stream}`);
     const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const messageQueue: string[] = [];
@@ -53,6 +53,16 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     }
     });
 
+    this.ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      this.reconnect(symbol, interval);
+    });
+
+    this.ws.on('close', () => {
+      console.log('WebSocket closed.');
+      this.reconnect(symbol, interval);
+    });
+
     while (true) {
       if (messageQueue.length > 0) {
         const message = messageQueue.shift();
@@ -85,6 +95,19 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
       }
     }
   }
+
+  private connectWebSocket(url: string): void {
+    this.ws = new WebSocket(url);
+  }
+
+  private reconnect(symbol: string, interval: string): void {
+    console.log('Reconnecting WebSocket...');
+    this.close();
+    setTimeout(() => {
+      this.connectWebSocket(`${this.binanceWebSocketUrl}/${symbol.toLowerCase()}@kline_${interval}`);
+    }, 5000); // Reconnect after a delay of 5 seconds
+  }
+
 
   close(): void {
     if (this.ws) {

@@ -1,24 +1,51 @@
 import { Candle } from './candle.entity';
-import { WaveType } from '../analysis/wave-type.enum';
+import { WaveType } from './wave-type.enum';
+import { PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, Entity } from 'typeorm';
 
+@Entity()
 export class Wave {
-  private candles: Candle[] = [];
-  private type: WaveType = WaveType.Unknown;
-  private startDateTime: Date | null = null;
-  private endDateTime: Date | null = null;
 
-  constructor(type: WaveType, candle: Candle) {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'varchar', nullable: false })
+  type: WaveType = WaveType.Unknown;
+
+  @Column()
+  startDateTime: Date | null = null;
+
+  @Column()
+  endDateTime: Date | null = null;;
+
+  @OneToMany(() => Candle, (candle) => candle.wave, { cascade: true, eager: true })
+  candles: Candle[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+
+
+  constructor(type: WaveType, candle?: Candle) {
     this.type = type;
-    this.candles.push(candle);
-    this.startDateTime = candle.openTime;
-    this.endDateTime = candle.openTime;
+    if (candle) {
+      this.addCandle(candle);
+      this.startDateTime = candle.openTime;
+      this.endDateTime = candle.openTime;
+    }
   }
   
+
 
   //Add candle in the wave if it is completed and not already present in the wave 
   //or if it is present but the candle data has changed 
   //and return true if the candle was added to the wave
   addCandle(newCandle: Candle): boolean {
+    if (!this.candles) {
+      this.candles = [];
+    }
 
     if (this.isCandlePresent(newCandle)) {
       //Logger.log(`Candle already present: ${JSON.stringify(newCandle)}`);
@@ -86,6 +113,10 @@ export class Wave {
 
   getCandles(): Candle[] {
     return this.candles;
+  }
+
+  getLastCandle(): Candle {
+    return this.candles[this.candles.length - 1];
   }
 
 }

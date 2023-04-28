@@ -8,7 +8,7 @@ import { CandleWithinPreviousCandleRule} from '../rules/candle-within-previous-r
 import { CloseWithinPreviousCorpseRule } from '../rules/close-within-previous-corpse-rule';
 import { DowntrendShadowCompareRule } from '../rules/downtrend-shadow-compare-rule';
 import { Candle } from '../models/candle.entity';
-import { WaveType } from './wave-type.enum';
+import { WaveType } from '../models/wave-type.enum';
 
 
 
@@ -230,12 +230,14 @@ describe('WaveAnalyzer', () => {
     // Example: expect the number of waves created
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const waves = (waveAnalyzer as any).waves;
-    expect(waves.length).toEqual(2);
+    expect(waves.length).toEqual(4);
 
 
     // Example: expect the wave types to be correct
     expect(waves[0].getType()).toEqual(WaveType.Uptrend);
     expect(waves[1].getType()).toEqual(WaveType.Downtrend);
+    expect(waves[2].getType()).toEqual(WaveType.Uptrend);
+    expect(waves[3].getType()).toEqual(WaveType.Downtrend);
 
   });
 

@@ -2,9 +2,11 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Wave } from '../models/wave.entity';
 import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
 import { IRule } from '../rules/rule.interface';
-import { WaveType } from './wave-type.enum';
+import { WaveType } from '../models/wave-type.enum';
 import { BaseRule } from '../rules/base-rule';
 import { Candle } from '../models/candle.entity';
+import { ICandleRepository } from '../repositories/candle-repository.interface';
+import { IWaveRepository } from '../repositories/wave-repository.interface';
 
 
 @Injectable()
@@ -14,7 +16,10 @@ export class WaveAnalyzer {
   private rules: IRule[] = [];
   private ruleEvaluationCache: string[] = [];
 
-    constructor(@Inject(CANDLE_DATA_PROVIDER)  private readonly candleDataProvider: ICandleDataProvider) {
+    constructor(@Inject(CANDLE_DATA_PROVIDER)  private readonly candleDataProvider: ICandleDataProvider,
+    @Inject('IWavesRepository') private readonly waveRepository: IWaveRepository,
+    @Inject('ICandleRepository') private readonly candleRepository: ICandleRepository,
+    ) {
   }
 
   addRule(rule: IRule): void {
@@ -50,7 +55,7 @@ export class WaveAnalyzer {
        
         //execute rules
         this.rules
-        .forEach((rule) => {
+        .forEach(async (rule) => {
           if ( rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType()))
           {
             if (this.checkIfCandleExistsInCache(candle)) {
@@ -80,6 +85,11 @@ export class WaveAnalyzer {
             {
               Logger.log(`Start ${rule.constructor.name}  wave`);
               currentWave.addCandle(candle);
+
+              //save current wave
+              await this.waveRepository.save(currentWave);
+              //await this.candleRepository.save({ ...candle, wave: savedWave });
+
               currentWave = new Wave(WaveType.Uptrend  ,candle);
               this.waves.push(currentWave);
               return;
@@ -88,12 +98,18 @@ export class WaveAnalyzer {
             {
               Logger.log(`Start ${rule.constructor.name}  wave`);
               currentWave.addCandle(candle);
+              await this.waveRepository.save(currentWave);
+              //await this.candleRepository.save({ ...candle, wave: savedWave });
+
               currentWave = new Wave(WaveType.Downtrend  ,candle);
               this.waves.push(currentWave);
               return;
             }
             else 
             {
+              await this.waveRepository.save(currentWave);
+              //await this.candleRepository.save({ ...candle, wave: savedWave });
+              
               // If wave type has changed, create a new wave
               const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
         
@@ -143,5 +159,20 @@ export class WaveAnalyzer {
       return true;
     }
 
+  }
+
+
+  private logWaveInfo(matchingRule: IRule): void {
+    const lastWave = this.waves.slice(-1)[0];
+    const waveCandles = lastWave.getCandles();
+  
+    Logger.log(`Number of waves: ${this.waves.length}`);
+    Logger.log(`Last wave: ${lastWave.getType()} with ${waveCandles.length} candles`);
+    Logger.log(`Last candle: ${JSON.stringify(waveCandles.map((candle) => ({
+      open: candle.open,
+      close: candle.close,
+      low: candle.low,
+      high: candle.high
+    })) )}`);
   }
 }

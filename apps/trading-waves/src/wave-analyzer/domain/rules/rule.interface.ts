@@ -1,4 +1,4 @@
-import { WaveType } from '../analysis/wave-type.enum';
+import { WaveType } from '../models/wave-type.enum';
 import { Candle } from '../models/candle.entity';
 
 export interface IRule {

@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Wave } from './wave.entity';
 
 export enum CandleColor {
   Green,
@@ -10,7 +11,7 @@ export class Candle {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({nullable: true})
   openTime: Date;
 
   @Column({ type: 'real' })
@@ -49,9 +50,17 @@ export class Candle {
   @Column( {type:'boolean'})
   completed: boolean;
 
+  @ManyToOne(() => Wave, (wave) => wave.candles, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'wave_id' }) 
+  wave: Wave;
+
+  @Column({ type: 'varchar', nullable: false })
   color: CandleColor;
 
+  @Column()
   maximumCorpse: number;
+
+  @Column()
   minimumCorpse: number;
 
   constructor(data?: {
