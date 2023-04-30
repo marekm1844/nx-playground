@@ -9,12 +9,16 @@ import { CloseWithinPreviousCorpseRule } from '../rules/close-within-previous-co
 import { DowntrendShadowCompareRule } from '../rules/downtrend-shadow-compare-rule';
 import { Candle } from '../models/candle.entity';
 import { WaveType } from '../models/wave-type.enum';
+import { IWaveRepository } from '../repositories/wave-repository.interface';
+import { ICandleRepository } from '../repositories/candle-repository.interface';
 
 
 
 describe('WaveAnalyzer', () => {
   let waveAnalyzer: WaveAnalyzer;
   let candleDataProvider: ICandleDataProvider;
+  let waveRepository: IWaveRepository;
+  let candleRepository: ICandleRepository;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -27,11 +31,25 @@ describe('WaveAnalyzer', () => {
             close: jest.fn(),
           },
         },
+        {
+          provide: 'IWavesRepository',
+          useValue: {
+            save: jest.fn(),
+          },
+        },
+        {
+          provide: 'ICandleRepository',
+          useValue: {
+            save: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     waveAnalyzer = moduleRef.get<WaveAnalyzer>(WaveAnalyzer);
     candleDataProvider = moduleRef.get<ICandleDataProvider>(CANDLE_DATA_PROVIDER);
+    waveRepository = moduleRef.get<IWaveRepository>('IWavesRepository');
+    candleRepository = moduleRef.get<ICandleRepository>('ICandleRepository');
   });
 
   it('should analyze waves with uptrend and downtrend rules', async () => {
@@ -415,6 +433,96 @@ it('should create a wave when the downtrend rule is added', async () => {
   expect(waves.length).toEqual(1);
   expect(waves[0].getType()).toEqual(WaveType.Downtrend);
 });
+
+//write switch between downtrend and uptrend
+it('it should hold downtrend ', async () => {
+
+  const candle0 = new Candle({
+      openTime: Date.now(),
+      open: '29334.39',
+      high: '29334.39',
+      low: '293333.9',
+      close: '293333.39',
+      volume: '1000',
+      closeTime: Date.now() + 60000,
+      quoteAssetVolume: '105000',
+      numberOfTrades: 10,
+      takerBuyBaseAssetVolume: '500',
+      takerBuyQuoteAssetVolume: '52500',
+      ignore: 0,
+      completed: true,
+    });
+
+  const candle1 = new Candle({
+    openTime: Date.now()+50000,
+    open: '29333.39',
+    high: '29333.39',
+    low: '29326.9',
+    close: '29326.91',
+    volume: '1000',
+    closeTime: Date.now() + 100000,
+    quoteAssetVolume: '105000',
+    numberOfTrades: 10,
+    takerBuyBaseAssetVolume: '500',
+    takerBuyQuoteAssetVolume: '52500',
+    ignore: 0,
+    completed: true,
+  });
+  const candle2 = new Candle({
+    openTime: Date.now()+ 60000,
+    open: '29326.9',
+    high: '29326.91',
+    low: '29326.9',
+    close: '29326.91',
+    volume: '1000',
+    closeTime: Date.now() + 120000,
+    quoteAssetVolume: '110000',
+    numberOfTrades: 15,
+    takerBuyBaseAssetVolume: '600',
+    takerBuyQuoteAssetVolume: '66000',
+    ignore: 0,
+    completed: true,
+  });
+
+  const candle4 = new Candle({
+    openTime: Date.now()+ 180000,
+    open: '29326.91',
+    high: '29326.91',
+    low: '29316.79',
+    close: '29318.15',
+    volume: '1000',
+    closeTime: Date.now() + 240000,
+    quoteAssetVolume: '115000',
+    numberOfTrades: 20,
+    takerBuyBaseAssetVolume: '700',
+    takerBuyQuoteAssetVolume: '77000',
+    ignore: 0,
+    completed: true,
+  });
+
+  
+  const mockCandles = [candle0, candle1, candle2, candle4];
+  (candleDataProvider.candles as jest.Mock).mockImplementation(async function* () {
+    for (const candle of mockCandles) {
+      yield candle;
+    }
+  }
+  );
+
+  const uptrendRule = new UptrendCorpseCompareRule().or(new UptrendShadowCompareRule());
+  const downtrendRule = new DowntrendCorpseCompareRule().or(new DowntrendShadowCompareRule());
+  const neutralRule = new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule());
+
+  waveAnalyzer.addRule(uptrendRule);
+  waveAnalyzer.addRule(downtrendRule);
+  waveAnalyzer.addRule(neutralRule);
+
+  await waveAnalyzer.analyze('symbol', 'interval');
+  const waves = (waveAnalyzer as any).waves;
+  expect(waves.length).toEqual(1);
+  expect(waves[0].getType()).toEqual(WaveType.Downtrend);
+});
+
 
 });
 

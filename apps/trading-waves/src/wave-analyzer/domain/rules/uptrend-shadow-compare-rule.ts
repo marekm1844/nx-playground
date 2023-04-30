@@ -1,8 +1,10 @@
 import { WaveType } from "../models/wave-type.enum";
 import { Candle } from "../models/candle.entity"
 import { BaseRule } from "./base-rule";
+import { Logger } from "@nestjs/common";
 
 export class UptrendShadowCompareRule extends BaseRule {
+    protected ruleName = 'UptrendShadowCompareRule';
 
     evaluate(candles: Candle[], type: WaveType): boolean {
         if (candles.length < 2) {
@@ -14,11 +16,17 @@ export class UptrendShadowCompareRule extends BaseRule {
           }
 
         const lastIndex = candles.length - 1;
-        return candles[lastIndex].high >= candles[lastIndex - 1].high;
+        const result = candles[lastIndex].high >= candles[lastIndex - 1].high;
+        if(result)
+        {
+            Logger.debug('UptrendShadowCompareRule');
+        }
+        return result;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getRuleType(){
         return WaveType.Uptrend;
     }
+
 }

@@ -26,7 +26,7 @@ import path from "path";
             database: configService.get<string>('DATABASE_FILE'),
             entities: entities.map((entity) => entity.default),
             synchronize: true,
-            logging: true,
+            logging: false,
             autoLoadEntities: true,
           };
         },

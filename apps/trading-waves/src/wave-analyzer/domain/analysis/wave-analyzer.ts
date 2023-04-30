@@ -33,8 +33,6 @@ export class WaveAnalyzer {
   async analyze(symbol: string, interval: string): Promise<void> {
     let currentWave: Wave | null = null;
 
-
-
     for await (const candle of this.candleDataProvider.candles(symbol, interval)) {
 
       //if no rules are added exit
@@ -44,7 +42,7 @@ export class WaveAnalyzer {
       }
 
       if (!currentWave) {
-        currentWave = new Wave(WaveType.Uptrend, candle);        
+        currentWave = new Wave(WaveType.Downtrend, candle);        
         this.waves.push(currentWave);
         continue;
       }
@@ -62,7 +60,13 @@ export class WaveAnalyzer {
               return;
             }
 
-            if((rule.getRuleType() === WaveType.Uptrend) && currentWave.getType() === WaveType.Uptrend)
+            if (rule.getRuleType() === WaveType.Unknown) {
+              Logger.log(`${rule.constructor.name}  detected in unknown wave`);
+              currentWave.addCandle(candle);
+              isUptrend = currentWave.getType() === WaveType.Uptrend;
+              return;
+            }
+            else if((rule.getRuleType() === WaveType.Uptrend) && currentWave.getType() === WaveType.Uptrend)
             {
 
               Logger.log(`${rule.constructor.name}  detected in uptrend wave`);
@@ -135,7 +139,6 @@ export class WaveAnalyzer {
         }))
       )}`
     );
-
 
 
 
