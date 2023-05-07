@@ -1,7 +1,6 @@
-
-import { Candle } from '../models/candle.entity';
+import { ICandle } from "../models/candle-entity.interface";
 
 export interface ICandleRepository {
-  save(candle: Candle): Promise<Candle>;
-  getCandlesByWaveId(waveId: number): Promise<Candle[]>;
+  save(candle: ICandle): Promise<ICandle>;
+  getCandlesByWaveId(waveId: string): Promise<ICandle[]>;
 }

@@ -3,11 +3,11 @@ import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/
 import { IRule } from '../rules/rule.interface';
 import { WaveType } from '../models/wave-type.enum';
 import { BaseRule } from '../rules/base-rule';
-import { Candle } from '../models/candle.entity';
 import { ICandleRepository } from '../repositories/candle-repository.interface';
 import { IWaveRepository } from '../repositories/wave-repository.interface';
 import { IWaveFactory } from '../factories/wave.factory';
 import { IWave } from '../models/wave-entity.interface';
+import { ICandle } from '../models/candle-entity.interface';
 
 
 @Injectable()
@@ -152,7 +152,7 @@ export class WaveAnalyzer {
     this.candleDataProvider.close();
   }
 
-  private checkIfCandleExistsInCache(candle1: Candle): boolean {
+  private checkIfCandleExistsInCache(candle1: ICandle): boolean {
     const cacheKey = `${candle1.openTime.getTime()}`;
 
 

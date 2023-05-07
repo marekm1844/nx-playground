@@ -1,11 +1,11 @@
+import { ICandle } from "../models/candle-entity.interface";
 import { WaveType } from "../models/wave-type.enum";
-import { Candle } from "../models/candle.entity";
 import { BaseRule } from "./base-rule";
 import { Logger } from "@nestjs/common";
 
 export class CloseWithinPreviousCorpseRule extends BaseRule{
     protected ruleName = 'CloseWithinPreviousCorpseRule';
-    evaluate(candles: Candle[]): boolean {
+    evaluate(candles: ICandle[]): boolean {
         if (candles.length < 2) {
             return false;
         }

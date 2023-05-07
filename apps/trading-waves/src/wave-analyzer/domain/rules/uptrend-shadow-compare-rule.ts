@@ -1,12 +1,12 @@
+import { ICandle } from "../models/candle-entity.interface";
 import { WaveType } from "../models/wave-type.enum";
-import { Candle } from "../models/candle.entity"
 import { BaseRule } from "./base-rule";
 import { Logger } from "@nestjs/common";
 
 export class UptrendShadowCompareRule extends BaseRule {
     protected ruleName = 'UptrendShadowCompareRule';
 
-    evaluate(candles: Candle[], type: WaveType): boolean {
+    evaluate(candles: ICandle[], type: WaveType): boolean {
         if (candles.length < 2) {
             return false;
         }

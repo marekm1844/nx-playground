@@ -4,7 +4,7 @@ export enum CandleColor {
   }
   
   export interface ICandle {
-    id: number;
+    id: string;
     openTime: Date;
     open: number;
     high: number;
@@ -23,4 +23,22 @@ export enum CandleColor {
     color: CandleColor;
     maximumCorpse: number;
     minimumCorpse: number;
+
+    initialize(
+      data?: {
+      openTime: number;
+      open: string;
+      high: string;
+      low: string;
+      close: string;
+      volume: string;
+      closeTime: number;
+      quoteAssetVolume: string;
+      numberOfTrades: number;
+      takerBuyBaseAssetVolume: string;
+      takerBuyQuoteAssetVolume: string;
+      ignore: number;
+      completed: boolean;
+    }): void;
+    
   }

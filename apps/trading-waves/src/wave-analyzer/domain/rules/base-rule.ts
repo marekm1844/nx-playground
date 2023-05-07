@@ -1,10 +1,10 @@
 
+import { ICandle } from "../models/candle-entity.interface";
 import { WaveType } from "../models/wave-type.enum";
-import { Candle } from "../models/candle.entity";
 import { IRule } from "./rule.interface";
 
 export abstract class BaseRule implements IRule {
-    abstract evaluate(candles: Candle[], type: WaveType ): boolean;
+    abstract evaluate(candles: ICandle[], type: WaveType ): boolean;
     protected abstract ruleName: string;
     
     //implement getRuleType to return the type of the rule (Uptrend, Downtrend, etc)
@@ -13,7 +13,7 @@ export abstract class BaseRule implements IRule {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     abstract getRuleType(): WaveType
 
-    getResultsTree(candles: Candle[], type: WaveType): { name: string; result: string }[] {
+    getResultsTree(candles: ICandle[], type: WaveType): { name: string; result: string }[] {
         const name = this.ruleName;
         const result = this.evaluate(candles, type) ? 'true' : 'false';
         return [{ name, result }];
@@ -25,13 +25,13 @@ export abstract class BaseRule implements IRule {
 
     and(...rules: IRule[]): IRule {
         return {
-            evaluate: (candles: Candle[], type: WaveType): boolean => {
+            evaluate: (candles: ICandle[], type: WaveType): boolean => {
                 return this.evaluate(candles,type) && rules.every((rule) => rule.evaluate(candles,type));
             },
             getRuleType : () => {
                 return this.getRuleType();
             },
-            getResultsTree: (candles: Candle[], type: WaveType): { name: string; result: string }[] => {
+            getResultsTree: (candles: ICandle[], type: WaveType): { name: string; result: string }[] => {
                 const thisRuleResult = this.getResultsTree(candles, type);
                 const otherRuleResults = rules.flatMap((rule) => rule.getResultsTree(candles, type));
                 return [...thisRuleResult, ...otherRuleResults];
@@ -41,13 +41,13 @@ export abstract class BaseRule implements IRule {
 
     or(...rules: IRule[]): IRule {
         return {
-            evaluate: (candles: Candle[], type: WaveType): boolean => {
+            evaluate: (candles: ICandle[], type: WaveType): boolean => {
                 return this.evaluate(candles, type) || rules.some((rule) => rule.evaluate(candles, type));
             },
             getRuleType : () => {
                 return this.getRuleType();
             },
-            getResultsTree: (candles: Candle[], type: WaveType): { name: string; result: string }[] => {
+            getResultsTree: (candles: ICandle[], type: WaveType): { name: string; result: string }[] => {
                 const thisRuleResult = this.getResultsTree(candles, type);
                 const otherRuleResults = rules.flatMap((rule) => rule.getResultsTree(candles, type));
                 return [...thisRuleResult, ...otherRuleResults];

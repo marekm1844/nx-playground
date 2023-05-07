@@ -1,13 +1,15 @@
-import { Candle } from '../../../domain/models/candle.entity';
+
 import { IWave } from '../../../domain/models/wave-entity.interface';
 import { WaveType } from '../../../domain/models/wave-type.enum';
 import { PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, Entity } from 'typeorm';
+import { TypeOrmCandle } from './candle.entity';
 
 @Entity()
 export class TypeOrmWave implements IWave {
 
-  @PrimaryGeneratedColumn()
-  id: number;
+  //add string guid as primary key for the wave
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', nullable: false })
   type: WaveType = WaveType.Unknown;
@@ -18,8 +20,8 @@ export class TypeOrmWave implements IWave {
   @Column()
   endDateTime: Date | null = null;;
 
-  @OneToMany(() => Candle, (candle) => candle.wave, { cascade: true, eager: true })
-  candles: Candle[];
+  @OneToMany(() => TypeOrmCandle, (candle) => candle.wave, { cascade: true, eager: true })
+  candles: TypeOrmCandle[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -27,7 +29,7 @@ export class TypeOrmWave implements IWave {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  initialize(type: WaveType, candle?: Candle) {
+  initialize(type: WaveType, candle?: TypeOrmCandle) {
     this.type = type;
     if (candle) {
       this.addCandle(candle);
@@ -39,7 +41,7 @@ export class TypeOrmWave implements IWave {
   //Add candle in the wave if it is completed and not already present in the wave 
   //or if it is present but the candle data has changed 
   //and return true if the candle was added to the wave
-  addCandle(newCandle: Candle): boolean {
+  addCandle(newCandle: TypeOrmCandle): boolean {
     if (!this.candles) {
       this.candles = [];
     }
@@ -94,11 +96,11 @@ export class TypeOrmWave implements IWave {
     return this.candles.length;
   }
   
-  private isCandlePresent(candle: Candle): boolean {
+  private isCandlePresent(candle: TypeOrmCandle): boolean {
     return this.candles.some((existingCandle) => existingCandle.openTime.getTime() === candle.openTime.getTime());
   }
 
-  private shouldUpdateCandle(existingCandle: Candle, newCandle: Candle): boolean {
+  private shouldUpdateCandle(existingCandle: TypeOrmCandle, newCandle: TypeOrmCandle): boolean {
     return (
       existingCandle.open !== newCandle.open ||
       existingCandle.high !== newCandle.high ||
@@ -108,11 +110,11 @@ export class TypeOrmWave implements IWave {
   }
 
 
-  getCandles(): Candle[] {
+  getCandles(): TypeOrmCandle[] {
     return this.candles;
   }
 
-  getLastCandle(): Candle {
+  getLastCandle(): TypeOrmCandle {
     return this.candles[this.candles.length - 1];
   }
 

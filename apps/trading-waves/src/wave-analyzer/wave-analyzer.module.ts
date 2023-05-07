@@ -2,16 +2,17 @@ import { Module } from "@nestjs/common";
 import { WaveAnalyzer } from "./domain/analysis/wave-analyzer";
 import { BinanceCandleDataProvider } from "./infrastructure/binance-candle-data.provider";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Candle } from "./domain/models/candle.entity";
+import { TypeOrmCandle } from "./infrastructure/typeorm/entities/candle.entity";
 import { WaveAnalyzerController } from "./api/wave-analyzer.controller";
 import { CANDLE_DATA_PROVIDER } from "./infrastructure/icandle-data-provider.interface";
 import { TypeOrmWave } from "./infrastructure/typeorm/entities/typeorm-wave.entity";
 import { WaveRepository } from "./infrastructure/repositories/wave.repository";
-import { CandleRepository } from "./infrastructure/repositories/candle.repository";
+import { TypeOrmCandleRepository } from "./infrastructure/repositories/typeorm-candle.repository";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { glob } from "glob";
 import path from "path";
 import { IWaveFactory } from "./domain/factories/wave.factory";
+import { ICandleFactory } from "./domain/factories/candle.factory";
 
 @Module({
     imports: [TypeOrmModule.forRootAsync({
@@ -33,16 +34,20 @@ import { IWaveFactory } from "./domain/factories/wave.factory";
         },
         inject: [ConfigService],
       }),
-      TypeOrmModule.forFeature([Candle, TypeOrmWave])],
+      TypeOrmModule.forFeature([TypeOrmCandle, TypeOrmWave])],
       providers: [WaveAnalyzer, BinanceCandleDataProvider,
         { provide: CANDLE_DATA_PROVIDER , useClass: BinanceCandleDataProvider},
+        {
+            provide: 'ICandle',
+            useClass: TypeOrmCandle,
+        },
         { 
             provide: 'IWavesRepository',
             useClass: WaveRepository,
         },
         {
             provide: 'ICandleRepository',
-            useClass: CandleRepository,        
+            useClass: TypeOrmCandleRepository,        
         },
         {
             provide: 'IWaveRepository',
@@ -57,6 +62,11 @@ import { IWaveFactory } from "./domain/factories/wave.factory";
           provide: 'WAVE_IMPLEMENTATION_TYPE',
           useValue: 'typeorm', // or 'firestore', depending on your configuration
         }, 
+        ICandleFactory,
+        {
+          provide: 'CANDLE_IMPLEMENTATION_TYPE',
+          useValue: 'typeorm', // or 'firestore', depending on your configuration
+        }
     ],
     controllers: [WaveAnalyzerController]
 })

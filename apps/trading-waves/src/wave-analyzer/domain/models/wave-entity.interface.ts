@@ -3,7 +3,7 @@ import { WaveType } from "./wave-type.enum";
 
 //export wave interface from wave class
 export interface IWave {
-    id: number;
+    id: string;
     type: WaveType;
     candles: ICandle[];
     createdAt: Date;

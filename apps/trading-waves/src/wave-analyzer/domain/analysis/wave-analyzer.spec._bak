@@ -7,7 +7,6 @@ import { UptrendShadowCompareRule } from '../rules/uptrend-shadow-compare-rule';
 import { CandleWithinPreviousCandleRule} from '../rules/candle-within-previous-rule';
 import { CloseWithinPreviousCorpseRule } from '../rules/close-within-previous-corpse-rule';
 import { DowntrendShadowCompareRule } from '../rules/downtrend-shadow-compare-rule';
-import { Candle } from '../models/candle.entity';
 import { WaveType } from '../models/wave-type.enum';
 import { IWaveRepository } from '../repositories/wave-repository.interface';
 import { ICandleRepository } from '../repositories/candle-repository.interface';

@@ -1,11 +1,13 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { TypeOrmWave } from '../../infrastructure/typeorm/entities/typeorm-wave.entity';
-import { CandleColor, ICandle } from './candle-entity.interface';
+import { TypeOrmWave } from './typeorm-wave.entity';
+import { CandleColor, ICandle } from '../../../domain/models/candle-entity.interface';
+import { Inject } from '@nestjs/common';
+import { IWaveFactory } from '../../../domain/factories/wave.factory';
 
 @Entity()
-export class Candle implements ICandle{
-  @PrimaryGeneratedColumn()
-  id: number;
+export class TypeOrmCandle implements ICandle{
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({nullable: true})
   openTime: Date;
@@ -59,7 +61,8 @@ export class Candle implements ICandle{
   @Column()
   minimumCorpse: number;
 
-  constructor(data?: {
+  initialize(
+    data?: {
     openTime: number;
     open: string;
     high: string;

@@ -1,32 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import WebSocket from 'ws';
 import { ICandleDataProvider } from './icandle-data-provider.interface';
-import { Candle } from '../domain/models/candle.entity';
+import {  } from './typeorm/entities/candle.entity';
+import { ICandleFactory } from '../domain/factories/candle.factory';
+import { ICandle } from '../domain/models/candle-entity.interface';
 
 @Injectable()
 export class BinanceCandleDataProvider implements ICandleDataProvider {
   private readonly binanceWebSocketUrl: string;
   private ws: WebSocket | null;
 
-  constructor() {
+  constructor(
+    private readonly candleFactory: ICandleFactory,) {
     this.binanceWebSocketUrl = 'wss://stream.binance.com:9443/ws';
     this.ws = null;
   }
 
-  async *candles(symbol: string, interval: string): AsyncIterableIterator<Candle> {
+  async *candles(symbol: string, interval: string): AsyncIterableIterator<ICandle> {
     const stream = `${symbol.toLowerCase()}@kline_${interval}`;
     this.connectWebSocket(`${this.binanceWebSocketUrl}/${stream}`);
     const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const messageQueue: string[] = [];
-    let resolve: ((value: Candle | PromiseLike<Candle>) => void) | null = null;
+    let resolve: ((value: ICandle | PromiseLike<ICandle>) => void) | null = null;
 
     this.ws.on('message', (message: string) => {
       
         const data = JSON.parse(message);
         const candleData = data.k;
 
-        const candle = new Candle({
+        const candle = this.candleFactory.createCandle({
           openTime: candleData.t,
           open: candleData.o,
           high: candleData.h,
@@ -69,7 +72,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
         const data = JSON.parse(message);
         const candleData = data.k;
 
-        const candle = new Candle({
+        const candle = this.candleFactory.createCandle({
           openTime: candleData.t,
           open: candleData.o,
           high: candleData.h,
@@ -89,7 +92,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
           yield candle;
         }
       } else {
-        yield new Promise<Candle>((r) => {
+        yield new Promise<ICandle>((r) => {
           resolve = r;
         });
       }
