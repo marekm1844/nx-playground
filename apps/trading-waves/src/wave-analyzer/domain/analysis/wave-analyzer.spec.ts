@@ -10,6 +10,8 @@ import { DowntrendShadowCompareRule } from '../rules/downtrend-shadow-compare-ru
 import { WaveType } from '../models/wave-type.enum';
 import { IWaveRepository } from '../repositories/wave-repository.interface';
 import { ICandleRepository } from '../repositories/candle-repository.interface';
+import { IWaveFactory } from '../factories/wave.factory';
+import { ICandleFactory } from '../factories/candle.factory';
 
 
 
@@ -18,8 +20,40 @@ describe('WaveAnalyzer', () => {
   let candleDataProvider: ICandleDataProvider;
   let waveRepository: IWaveRepository;
   let candleRepository: ICandleRepository;
+  let waveFactory: IWaveFactory;
+  let candleFactory: ICandleFactory;
 
   beforeEach(async () => {
+    
+    const waveFactoryMock = {
+      implementation: 'typeorm',
+      createWave: jest.fn().mockReturnValue({
+        addCandle: jest.fn(),
+        getType: jest.fn().mockReturnValue(WaveType.Uptrend),
+        getCandles: jest.fn().mockReturnValue([]),
+        getStartDateTime: jest.fn(),
+        initialize: jest.fn(),
+      }),
+    };
+
+    const candleFactoryMock = {
+      implementation: 'typeorm',
+      createCandle: jest.fn().mockImplementation((data) => ({
+        getClose: jest.fn().mockReturnValue(data.close),
+        getOpen: jest.fn().mockReturnValue(data.open),
+        getHigh: jest.fn().mockReturnValue(data.high),
+        getLow: jest.fn().mockReturnValue(data.low),
+        getVolume: jest.fn().mockReturnValue(data.volume),
+        getDateTime: jest.fn().mockReturnValue(data.dateTime),
+      })),
+    };
+
+    const waveRepositoryMock = {
+      save: jest.fn(),
+      getWaves: jest.fn(),
+    };
+
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         WaveAnalyzer,
@@ -32,15 +66,22 @@ describe('WaveAnalyzer', () => {
         },
         {
           provide: 'IWavesRepository',
-          useValue: {
-            save: jest.fn(),
-          },
+          useValue: waveRepositoryMock
         },
         {
           provide: 'ICandleRepository',
           useValue: {
             save: jest.fn(),
+            getCandlesByWaveId: jest.fn(),
           },
+        },
+        {
+          provide:  IWaveFactory,
+          useValue: waveFactoryMock,
+        },
+        {
+          provide: ICandleFactory,
+          useValue: candleFactoryMock,
         },
       ],
     }).compile();
@@ -49,6 +90,12 @@ describe('WaveAnalyzer', () => {
     candleDataProvider = moduleRef.get<ICandleDataProvider>(CANDLE_DATA_PROVIDER);
     waveRepository = moduleRef.get<IWaveRepository>('IWavesRepository');
     candleRepository = moduleRef.get<ICandleRepository>('ICandleRepository');
+    waveFactory = moduleRef.get<IWaveFactory>(IWaveFactory);
+    candleFactory = moduleRef.get<ICandleFactory>(ICandleFactory);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should analyze waves with uptrend and downtrend rules', async () => {
@@ -59,7 +106,7 @@ describe('WaveAnalyzer', () => {
     waveAnalyzer.addRule(downtrendRule);
 
     //starting with uptrend normal candle
-    const candle1 = new Candle({
+    const candle1 = candleFactory.createCandle({
       openTime: Date.now(),
       open: '80',
       high: '100',
@@ -75,7 +122,7 @@ describe('WaveAnalyzer', () => {
       completed: true,
     });
     //
-    const candle2 = new Candle({
+    const candle2 = candleFactory.createCandle({
       openTime: Date.now()+ 60000,
       open: '100',
       high: '100',
@@ -90,7 +137,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle3 = new Candle({
+    const candle3 = candleFactory.createCandle({
       openTime: Date.now()+ 70000,
       open: '80',
       high: '140',
@@ -105,7 +152,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle4 = new Candle({
+    const candle4 = candleFactory.createCandle({
       openTime: Date.now()+ 120000,
       open: '75',
       high: '80',
@@ -120,7 +167,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle5 = new Candle({
+    const candle5 = candleFactory.createCandle({
       openTime: Date.now()+ 180000,
       open: '70',
       high: '70',
@@ -135,7 +182,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle6 = new Candle({
+    const candle6 = candleFactory.createCandle({
       openTime: Date.now()+ 240000,
       open: '60',
       high: '70',
@@ -150,7 +197,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle7 = new Candle({
+    const candle7 = candleFactory.createCandle({
       openTime: Date.now()+ 300000,
       open: '40',
       high: '50',
@@ -165,7 +212,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle8 = new Candle({
+    const candle8 = candleFactory.createCandle({
       openTime: Date.now()+ 360000,
       open: '55',
       high: '70',
@@ -180,7 +227,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle9 = new Candle({
+    const candle9 = candleFactory.createCandle({
       openTime: Date.now()+ 420000,
       open: '60',
       high: '70',
@@ -195,7 +242,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle10 = new Candle({
+    const candle10 = candleFactory.createCandle({
       openTime: Date.now()+ 480000,
       open: '70',
       high: '90',
@@ -210,7 +257,7 @@ describe('WaveAnalyzer', () => {
       ignore: 0,
       completed: true,
     });
-    const candle11 = new Candle({
+    const candle11 = candleFactory.createCandle({
       openTime: Date.now()+ 540000,
       open: '50',
       high: '60',
@@ -260,7 +307,7 @@ describe('WaveAnalyzer', () => {
 
   // Test case 1: No rules are added
 it('should not create any waves when no rules are added', async () => {
-  const candle1 = new Candle({
+  const candle1 = candleFactory.createCandle({
     openTime: Date.now(),
     open: '100',
     high: '110',
@@ -275,7 +322,7 @@ it('should not create any waves when no rules are added', async () => {
     ignore: 0,
     completed: true,
   });
-  const candle2 = new Candle({
+  const candle2 = candleFactory.createCandle({
     openTime: Date.now()+ 60000,
     open: '105',
     high: '120',
@@ -307,7 +354,7 @@ it('should not create any waves when no rules are added', async () => {
 
 //write test to check the uptend rule with CandleWithinPreviousCandleRule rule 
 it('should create a wave when the uptrend rule is added', async () => {
-  const candle1 = new Candle({
+  const candle1 = candleFactory.createCandle({
     openTime: Date.now(),
     open: '100',
     high: '110',
@@ -322,7 +369,7 @@ it('should create a wave when the uptrend rule is added', async () => {
     ignore: 0,
     completed: true,
   });
-  const candle2 = new Candle({
+  const candle2 = candleFactory.createCandle({
     openTime: Date.now()+ 60000,
     open: '105',
     high: '120',
@@ -337,7 +384,7 @@ it('should create a wave when the uptrend rule is added', async () => {
     ignore: 0,
     completed: true,
   });
-  const candle3 = new Candle({
+  const candle3 = candleFactory.createCandle({
     openTime: Date.now()+ 120000,
     open: '115',
     high: '115',
@@ -373,7 +420,7 @@ it('should create a wave when the uptrend rule is added', async () => {
 
 //write test to check the downtrend rule with CandleWithinPreviousCandleRule rule
 it('should create a wave when the downtrend rule is added', async () => {
-  const candle1 = new Candle({
+  const candle1 = candleFactory.createCandle({
     openTime: Date.now(),
     open: '100',
     high: '110',
@@ -388,7 +435,7 @@ it('should create a wave when the downtrend rule is added', async () => {
     ignore: 0,
     completed: true,
   });
-  const candle2 = new Candle({
+  const candle2 = candleFactory.createCandle({
     openTime: Date.now()+ 60000,
     open: '90',
     high: '120',
@@ -403,7 +450,7 @@ it('should create a wave when the downtrend rule is added', async () => {
     ignore: 0,
     completed: true,
   });
-  const candle3 = new Candle({
+  const candle3 = candleFactory.createCandle({
     openTime: Date.now()+ 120000,
     open: '70',
     high: '85',
@@ -436,7 +483,7 @@ it('should create a wave when the downtrend rule is added', async () => {
 //write switch between downtrend and uptrend
 it('it should hold downtrend ', async () => {
 
-  const candle0 = new Candle({
+  const candle0 = candleFactory.createCandle({
       openTime: Date.now(),
       open: '29334.39',
       high: '29334.39',
@@ -452,7 +499,7 @@ it('it should hold downtrend ', async () => {
       completed: true,
     });
 
-  const candle1 = new Candle({
+  const candle1 = candleFactory.createCandle({
     openTime: Date.now()+50000,
     open: '29333.39',
     high: '29333.39',
@@ -467,7 +514,7 @@ it('it should hold downtrend ', async () => {
     ignore: 0,
     completed: true,
   });
-  const candle2 = new Candle({
+  const candle2 = candleFactory.createCandle({
     openTime: Date.now()+ 60000,
     open: '29326.9',
     high: '29326.91',
@@ -483,7 +530,7 @@ it('it should hold downtrend ', async () => {
     completed: true,
   });
 
-  const candle4 = new Candle({
+  const candle4 = candleFactory.createCandle({
     openTime: Date.now()+ 180000,
     open: '29326.91',
     high: '29326.91',

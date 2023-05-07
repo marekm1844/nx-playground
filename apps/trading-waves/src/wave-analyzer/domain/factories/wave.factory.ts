@@ -4,7 +4,6 @@ import { TypeOrmWave } from "../../infrastructure/typeorm/entities/typeorm-wave.
 import { IWave } from "../models/wave-entity.interface";
 import { WaveType } from "../models/wave-type.enum";
 import { ICandle } from "../models/candle-entity.interface";
-import { TypeOrmCandle } from "../../infrastructure/typeorm/entities/candle.entity";
 
 export type WaveImplementation = 'typeorm' | 'firestore';
 

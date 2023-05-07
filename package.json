@@ -22,6 +22,8 @@
     "axios": "^1.0.0",
     "cache-manager": "^5.2.0",
     "cache-manager-redis-yet": "^4.1.1",
+    "class-transformer": "^0.5.1",
+    "firebase-admin": "^11.8.0",
     "glob": "^10.2.2",
     "nestjs-console": "^8.0.0",
     "reflect-metadata": "^0.1.13",

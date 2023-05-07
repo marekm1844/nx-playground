@@ -1,14 +1,20 @@
 import { UUID } from "typeorm/driver/mongodb/bson.typings";
 import { CandleColor, ICandle } from "../../../domain/models/candle-entity.interface";
+import { Type, plainToClass } from "class-transformer";
+
 
 export class FirestoreCandle implements ICandle {
     id: string;
+
+    @Type(() => Date)
     openTime: Date;
     open: number;
     high: number;
     low: number;
     close: number;
     volume: number;
+
+    @Type(() => Date)
     closeTime: Date;
     quoteAssetVolume: number;
     numberOfTrades: number;
@@ -20,6 +26,10 @@ export class FirestoreCandle implements ICandle {
     color: CandleColor;
     maximumCorpse: number;
     minimumCorpse: number;
+
+    constructor(init?: Partial<FirestoreCandle>) {
+        Object.assign(this, init);
+    }
 
     initialize(data?: {
         openTime: number;
@@ -57,4 +67,18 @@ export class FirestoreCandle implements ICandle {
             this.minimumCorpse = this.close > this.open ? this.open : this.close;
         }
     }
+
+    toFirestoreDocument(): Record<string, unknown> {
+        const { id, ...data } = this;
+        return { ...data };
+      }
+
+    static fromFirestoreDocument(doc: FirebaseFirestore.DocumentSnapshot): FirestoreCandle {
+        const data = doc.data();
+      return new FirestoreCandle({
+        id: doc.id,
+        ...data,
+      });
+    }
+
   }
