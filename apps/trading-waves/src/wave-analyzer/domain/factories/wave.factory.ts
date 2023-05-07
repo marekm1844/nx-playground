@@ -1,9 +1,10 @@
 
 import { Inject, NotImplementedException } from "@nestjs/common";
 import { TypeOrmWave } from "../../infrastructure/typeorm/entities/typeorm-wave.entity";
-import { Candle } from "../models/candle.entity";
 import { IWave } from "../models/wave-entity.interface";
 import { WaveType } from "../models/wave-type.enum";
+import { ICandle } from "../models/candle-entity.interface";
+import { TypeOrmCandle } from "../../infrastructure/typeorm/entities/candle.entity";
 
 export type WaveImplementation = 'typeorm' | 'firestore';
 
@@ -13,7 +14,7 @@ export class IWaveFactory {
     //based on the implementation, return the correct wave
     //for example, if the implementation is 'firestore', return a FirestoreWave
     //if the implementation is 'typeorm', return a TypeOrmWave
-    createWave(type: WaveType, candle?: Candle): IWave {
+    createWave(type: WaveType, candle?: ICandle): IWave {
       switch (this.implementation) {
         case 'typeorm':
             {
