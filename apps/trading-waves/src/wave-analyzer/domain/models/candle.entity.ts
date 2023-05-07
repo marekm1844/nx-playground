@@ -1,13 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Wave } from './wave.entity';
-
-export enum CandleColor {
-  Green,
-  Red,
-}
+import { TypeOrmWave } from '../../infrastructure/typeorm/entities/typeorm-wave.entity';
+import { CandleColor, ICandle } from './candle-entity.interface';
 
 @Entity()
-export class Candle {
+export class Candle implements ICandle{
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -50,9 +46,9 @@ export class Candle {
   @Column( {type:'boolean'})
   completed: boolean;
 
-  @ManyToOne(() => Wave, (wave) => wave.candles, { onDelete: 'CASCADE' })
+  @ManyToOne(() => TypeOrmWave, (wave) => wave.candles, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'wave_id' }) 
-  wave: Wave;
+  wave: TypeOrmWave;
 
   @Column({ type: 'varchar', nullable: false })
   color: CandleColor;

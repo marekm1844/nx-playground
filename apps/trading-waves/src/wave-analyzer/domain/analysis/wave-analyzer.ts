@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Wave } from '../models/wave.entity';
 import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
 import { IRule } from '../rules/rule.interface';
 import { WaveType } from '../models/wave-type.enum';
@@ -7,18 +6,21 @@ import { BaseRule } from '../rules/base-rule';
 import { Candle } from '../models/candle.entity';
 import { ICandleRepository } from '../repositories/candle-repository.interface';
 import { IWaveRepository } from '../repositories/wave-repository.interface';
+import { IWaveFactory } from '../factories/wave.factory';
+import { IWave } from '../models/wave-entity.interface';
 
 
 @Injectable()
 export class WaveAnalyzer {
-  private wave: Wave;
-  private waves: Wave[] = [];
+  private wave: IWave;
+  private waves: IWave[] = [];
   private rules: IRule[] = [];
   private ruleEvaluationCache: string[] = [];
 
     constructor(@Inject(CANDLE_DATA_PROVIDER)  private readonly candleDataProvider: ICandleDataProvider,
     @Inject('IWavesRepository') private readonly waveRepository: IWaveRepository,
     @Inject('ICandleRepository') private readonly candleRepository: ICandleRepository,
+    private readonly waveFactory: IWaveFactory,
     ) {
   }
 
@@ -31,7 +33,7 @@ export class WaveAnalyzer {
   }
 
   async analyze(symbol: string, interval: string): Promise<void> {
-    let currentWave: Wave | null = null;
+    let currentWave: IWave | null = null;
 
     for await (const candle of this.candleDataProvider.candles(symbol, interval)) {
 
@@ -42,7 +44,7 @@ export class WaveAnalyzer {
       }
 
       if (!currentWave) {
-        currentWave = new Wave(WaveType.Downtrend, candle);        
+        currentWave = this.waveFactory.createWave(WaveType.Downtrend, candle);        
         this.waves.push(currentWave);
         continue;
       }
@@ -94,7 +96,7 @@ export class WaveAnalyzer {
               await this.waveRepository.save(currentWave);
               //await this.candleRepository.save({ ...candle, wave: savedWave });
 
-              currentWave = new Wave(WaveType.Uptrend  ,candle);
+              currentWave = this.waveFactory.createWave(WaveType.Uptrend  ,candle);
               this.waves.push(currentWave);
               return;
             }
@@ -105,7 +107,7 @@ export class WaveAnalyzer {
               await this.waveRepository.save(currentWave);
               //await this.candleRepository.save({ ...candle, wave: savedWave });
 
-              currentWave = new Wave(WaveType.Downtrend  ,candle);
+              currentWave = this.waveFactory.createWave(WaveType.Downtrend  ,candle);
               this.waves.push(currentWave);
               return;
             }
@@ -117,7 +119,7 @@ export class WaveAnalyzer {
               // If wave type has changed, create a new wave
               const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
         
-              currentWave = new Wave(newWaveType ,candle);
+              currentWave = this.waveFactory.createWave(newWaveType ,candle);
               this.waves.push(currentWave);
               console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
               

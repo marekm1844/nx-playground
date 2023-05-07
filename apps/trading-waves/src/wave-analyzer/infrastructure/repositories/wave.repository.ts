@@ -1,22 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Wave } from '../../domain/models/wave.entity';
+import { TypeOrmWave } from '../typeorm/entities/typeorm-wave.entity';
 import { IWaveRepository } from '../../domain/repositories/wave-repository.interface';
 
 @Injectable()
 export class WaveRepository implements IWaveRepository {
   constructor(
-    @InjectRepository(Wave)
-    private readonly waveRepository: Repository<Wave>,
+    @InjectRepository(TypeOrmWave)
+    private readonly waveRepository: Repository<TypeOrmWave>,
   ) {}
 
-  async save(wave: Wave): Promise<Wave> {
+  async save(wave: TypeOrmWave): Promise<TypeOrmWave> {
     const waveEntity = this.waveRepository.create(wave);
     return  await this.waveRepository.save(waveEntity);
   }
 
-  async getWaves(): Promise<Wave[]> {
+  async getWaves(): Promise<TypeOrmWave[]> {
     return await this.waveRepository.find();
 
   }

@@ -1,6 +1,6 @@
-import { Wave } from '../models/wave.entity';
+import { IWave } from '../models/wave-entity.interface';
 
 export interface IWaveRepository {
-  save(wave: Wave): Promise<Wave>;
-  getWaves(): Promise<Wave[]>;
+  save(wave: IWave): Promise<IWave>;
+  getWaves(): Promise<IWave[]>;
 }

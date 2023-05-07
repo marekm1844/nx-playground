@@ -1,16 +1,17 @@
 import { Module } from "@nestjs/common";
 import { WaveAnalyzer } from "./domain/analysis/wave-analyzer";
 import { BinanceCandleDataProvider } from "./infrastructure/binance-candle-data.provider";
-import { TypeOrmModule, TypeOrmModuleOptions } from "@nestjs/typeorm";
+import { TypeOrmModule } from "@nestjs/typeorm";
 import { Candle } from "./domain/models/candle.entity";
 import { WaveAnalyzerController } from "./api/wave-analyzer.controller";
 import { CANDLE_DATA_PROVIDER } from "./infrastructure/icandle-data-provider.interface";
-import { Wave } from "./domain/models/wave.entity";
+import { TypeOrmWave } from "./infrastructure/typeorm/entities/typeorm-wave.entity";
 import { WaveRepository } from "./infrastructure/repositories/wave.repository";
 import { CandleRepository } from "./infrastructure/repositories/candle.repository";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { glob } from "glob";
 import path from "path";
+import { IWaveFactory } from "./domain/factories/wave.factory";
 
 @Module({
     imports: [TypeOrmModule.forRootAsync({
@@ -32,8 +33,8 @@ import path from "path";
         },
         inject: [ConfigService],
       }),
-      TypeOrmModule.forFeature([Candle, Wave])],
-    providers: [WaveAnalyzer, BinanceCandleDataProvider,
+      TypeOrmModule.forFeature([Candle, TypeOrmWave])],
+      providers: [WaveAnalyzer, BinanceCandleDataProvider,
         { provide: CANDLE_DATA_PROVIDER , useClass: BinanceCandleDataProvider},
         { 
             provide: 'IWavesRepository',
@@ -42,7 +43,20 @@ import path from "path";
         {
             provide: 'ICandleRepository',
             useClass: CandleRepository,        
-        } 
+        },
+        {
+            provide: 'IWaveRepository',
+            useClass: TypeOrmWave
+        },
+        {
+            provide: 'IWave',
+            useClass: TypeOrmWave,
+        },
+        IWaveFactory,
+        {
+          provide: 'WAVE_IMPLEMENTATION_TYPE',
+          useValue: 'typeorm', // or 'firestore', depending on your configuration
+        }, 
     ],
     controllers: [WaveAnalyzerController]
 })

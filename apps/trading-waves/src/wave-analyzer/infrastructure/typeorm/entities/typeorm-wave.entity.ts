@@ -1,9 +1,10 @@
-import { Candle } from './candle.entity';
-import { WaveType } from './wave-type.enum';
+import { Candle } from '../../../domain/models/candle.entity';
+import { IWave } from '../../../domain/models/wave-entity.interface';
+import { WaveType } from '../../../domain/models/wave-type.enum';
 import { PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, Entity } from 'typeorm';
 
 @Entity()
-export class Wave {
+export class TypeOrmWave implements IWave {
 
   @PrimaryGeneratedColumn()
   id: number;
@@ -26,9 +27,7 @@ export class Wave {
   @UpdateDateColumn()
   updatedAt: Date;
 
-
-
-  constructor(type: WaveType, candle?: Candle) {
+  initialize(type: WaveType, candle?: Candle) {
     this.type = type;
     if (candle) {
       this.addCandle(candle);
@@ -36,8 +35,6 @@ export class Wave {
       this.endDateTime = candle.openTime;
     }
   }
-  
-
 
   //Add candle in the wave if it is completed and not already present in the wave 
   //or if it is present but the candle data has changed 
