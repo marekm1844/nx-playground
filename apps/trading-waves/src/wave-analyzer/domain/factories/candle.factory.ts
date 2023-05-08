@@ -36,7 +36,11 @@ export class ICandleFactory {
             return candle;
         }
       case 'firestore':
-        throw new NotImplementedException()
+        {
+            const candle = new FirestoreCandle();
+            candle.initialize(candleData);
+            return candle;
+        }
       default:
         throw new Error('Invalid candle implementation specified');
     }

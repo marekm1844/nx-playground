@@ -19,7 +19,7 @@ export class WaveAnalyzerController {
     this.waveAnalyzer.addRule(new UptrendCorpseCompareRule().or(new UptrendShadowCompareRule().or(new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule()))));
     this.waveAnalyzer.addRule(new DowntrendCorpseCompareRule().or(new DowntrendShadowCompareRule().or(new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule()))));
     const s1 = 'BTCUSDT';
-    const s2 = '15m'
+    const s2 = '1m'
     this.waveAnalyzer.analyze(s1, s2);
     return `Wave analysis started for ${s1} with ${s2} interval`;
   }

@@ -13,9 +13,14 @@ import { glob } from "glob";
 import path from "path";
 import { IWaveFactory } from "./domain/factories/wave.factory";
 import { ICandleFactory } from "./domain/factories/candle.factory";
+import { FirestoreCandle } from "./infrastructure/firestore/entities/firestore-candle.entity";
+import { FirestoreWaveRepository } from "./infrastructure/firestore/repositories/firestore-wave.repository";
+import { FirestoreCandleRepository } from "./infrastructure/firestore/repositories/firestore-candle.repository";
+import { FirestoreWave } from "./infrastructure/firestore/entities/firestorm-wave.entity";
+import { FirestoreModule } from "./infrastructure/firestore/firestore.module";
 
 @Module({
-    imports: [TypeOrmModule.forRootAsync({
+    imports: [FirestoreModule, TypeOrmModule.forRootAsync({
         imports: [ConfigModule],
         useFactory: async (configService: ConfigService) => {
           const entityFiles = glob.sync('src/**/*.entity.ts');
@@ -35,39 +40,36 @@ import { ICandleFactory } from "./domain/factories/candle.factory";
         inject: [ConfigService],
       }),
       TypeOrmModule.forFeature([TypeOrmCandle, TypeOrmWave])],
-      providers: [WaveAnalyzer, BinanceCandleDataProvider,
+      providers: [FirestoreModule, WaveAnalyzer, BinanceCandleDataProvider,
         { provide: CANDLE_DATA_PROVIDER , useClass: BinanceCandleDataProvider},
         {
             provide: 'ICandle',
-            useClass: TypeOrmCandle,
+            useClass: FirestoreCandle,
         },
         { 
-            provide: 'IWavesRepository',
-            useClass: WaveRepository,
+            provide: 'IWaveRepository',
+            useClass: FirestoreWaveRepository,
         },
         {
             provide: 'ICandleRepository',
-            useClass: TypeOrmCandleRepository,        
-        },
-        {
-            provide: 'IWaveRepository',
-            useClass: TypeOrmWave
+            useClass: FirestoreCandleRepository,        
         },
         {
             provide: 'IWave',
-            useClass: TypeOrmWave,
+            useClass: FirestoreWave,
         },
         IWaveFactory,
         {
           provide: 'WAVE_IMPLEMENTATION_TYPE',
-          useValue: 'typeorm', // or 'firestore', depending on your configuration
+          useValue: 'firestore', // or 'firestore', depending on your configuration
         }, 
         ICandleFactory,
         {
           provide: 'CANDLE_IMPLEMENTATION_TYPE',
-          useValue: 'typeorm', // or 'firestore', depending on your configuration
-        }
+          useValue: 'firestore', // or 'firestore', depending on your configuration
+        },
+        
     ],
-    controllers: [WaveAnalyzerController]
+    controllers: [WaveAnalyzerController],
 })
 export class WaveAnalyzerModule {}

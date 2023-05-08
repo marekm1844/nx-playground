@@ -1,6 +1,9 @@
+import { v4 as uuidv4 } from 'uuid';
 import { ICandle } from "../../../domain/models/candle-entity.interface";
 import { IWave } from "../../../domain/models/wave-entity.interface";
 import { WaveType } from "../../../domain/models/wave-type.enum";
+import * as firabase from 'firebase-admin';
+import { FirestoreCandle } from './firestore-candle.entity';
 
 export class FirestoreWave implements IWave {
     id: string;
@@ -16,10 +19,13 @@ export class FirestoreWave implements IWave {
     }
   
     initialize(type: WaveType, candle?: ICandle): void {
+      this.id = uuidv4();
       this.type = type;
       this.candles = candle ? [candle] : [];
       this.startDateTime = candle?.openTime || null;
       this.endDateTime = candle?.closeTime || null;
+      this.createdAt = firabase.firestore.Timestamp.now().toDate();
+      this.updatedAt = firabase.firestore.Timestamp.now().toDate();
     }
   
     addCandle(newCandle: ICandle): boolean {
@@ -43,6 +49,7 @@ export class FirestoreWave implements IWave {
         // Update startDateTime and endDateTime of the wave
         this.startDateTime = this.candles[0]?.openTime || null;
         this.endDateTime = this.candles[this.candles.length - 1]?.closeTime || null;
+        this.updatedAt = firabase.firestore.Timestamp.now().toDate();
   
         return true;
       }
@@ -97,17 +104,18 @@ export class FirestoreWave implements IWave {
     }
   
     toFirestoreDocument(): Record<string, unknown> {
-      const { id, ...data } = this;
-      return { ...data };
+        const { id, candles, ...data } = this;
+        const plainCandles = candles.map((candle: FirestoreCandle) => candle.toFirestoreDocument());
+        return { ...data, candles: plainCandles };
     }
   
-    static fromFirestoreDocument(doc: FirebaseFirestore.DocumentSnapshot): FirestoreWave {
+    static fromFirestoreDocument(doc: firabase.firestore.DocumentSnapshot<firabase.firestore.DocumentData> ): FirestoreWave {
       const data = doc.data();
       return new FirestoreWave({
         id: doc.id,
         ...data,
-        createdAt: (data.createdAt as FirebaseFirestore.Timestamp).toDate(),
-        updatedAt: (data.updatedAt as FirebaseFirestore.Timestamp).toDate(),
+        createdAt: (data.createdAt as firabase.firestore.Timestamp).toDate(),
+        updatedAt: (data.updatedAt as firabase.firestore.Timestamp).toDate(),
       });
     }
   }

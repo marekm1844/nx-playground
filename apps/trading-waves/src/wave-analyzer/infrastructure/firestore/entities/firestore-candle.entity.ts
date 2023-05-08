@@ -1,6 +1,8 @@
-import { UUID } from "typeorm/driver/mongodb/bson.typings";
+import { v4 as uuidv4 } from 'uuid';
 import { CandleColor, ICandle } from "../../../domain/models/candle-entity.interface";
-import { Type, plainToClass } from "class-transformer";
+import { Type, classToPlain, plainToClass } from "class-transformer";
+import * as firabase from 'firebase-admin';
+
 
 
 export class FirestoreCandle implements ICandle {
@@ -48,7 +50,7 @@ export class FirestoreCandle implements ICandle {
     }) {
 
         if (data) {
-            this.id = new UUID().toString();
+            this.id = uuidv4();
             this.openTime = new Date(data.openTime);
             this.open = parseFloat(data.open);
             this.high = parseFloat(data.high);
@@ -68,12 +70,12 @@ export class FirestoreCandle implements ICandle {
         }
     }
 
-    toFirestoreDocument(): Record<string, unknown> {
-        const { id, ...data } = this;
-        return { ...data };
+    toFirestoreDocument(): Record<string, any> {
+        return classToPlain(this);
+        
       }
 
-    static fromFirestoreDocument(doc: FirebaseFirestore.DocumentSnapshot): FirestoreCandle {
+    static fromFirestoreDocument(doc: firabase.firestore.DocumentSnapshot<firabase.firestore.DocumentData>): FirestoreCandle {
         const data = doc.data();
       return new FirestoreCandle({
         id: doc.id,

@@ -18,7 +18,7 @@ export class WaveAnalyzer {
   private ruleEvaluationCache: string[] = [];
 
     constructor(@Inject(CANDLE_DATA_PROVIDER)  private readonly candleDataProvider: ICandleDataProvider,
-    @Inject('IWavesRepository') private readonly waveRepository: IWaveRepository,
+    @Inject('IWaveRepository') private readonly waveRepository: IWaveRepository,
     @Inject('ICandleRepository') private readonly candleRepository: ICandleRepository,
     private readonly waveFactory: IWaveFactory,
     ) {

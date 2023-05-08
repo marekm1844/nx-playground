@@ -4,6 +4,7 @@ import { TypeOrmWave } from "../../infrastructure/typeorm/entities/typeorm-wave.
 import { IWave } from "../models/wave-entity.interface";
 import { WaveType } from "../models/wave-type.enum";
 import { ICandle } from "../models/candle-entity.interface";
+import { FirestoreWave } from "../../infrastructure/firestore/entities/firestorm-wave.entity";
 
 export type WaveImplementation = 'typeorm' | 'firestore';
 
@@ -22,7 +23,11 @@ export class IWaveFactory {
             return wave;
             }
         case 'firestore':
-          throw new NotImplementedException()
+          {
+            const wave = new FirestoreWave();
+            wave.initialize(type, candle);
+            return wave;
+          }
         default:
           throw new Error('Invalid wave implementation specified');
       }
