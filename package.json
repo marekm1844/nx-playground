@@ -23,6 +23,7 @@
     "cache-manager": "^5.2.0",
     "cache-manager-redis-yet": "^4.1.1",
     "class-transformer": "^0.5.1",
+    "eventemitter2": "^6.4.9",
     "firebase-admin": "^11.8.0",
     "glob": "^10.2.2",
     "nestjs-console": "^8.0.0",
