@@ -1,13 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { EventEmitter2 } from 'eventemitter2';
 import { IDomainEvent } from "./domain-event.interface";
+import { IQueueService } from "./queue-service.interface";
 
 @Injectable()
-export class EventPublisher {
-  constructor( private readonly evenrEmitter: EventEmitter2 ) {}
+export class EventPublisher<T> {
+  constructor( private readonly queue: IQueueService) {}
 
-  publish<T>(event: IDomainEvent<T>) {
+  async publish(event: IDomainEvent<T>) {
     const eventName = event.constructor.name;
-    this.evenrEmitter.emit(eventName, event);
+    this.queue.add(eventName, event);
   }
 }

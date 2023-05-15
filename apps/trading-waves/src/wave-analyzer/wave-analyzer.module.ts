@@ -18,6 +18,7 @@ import { FirestoreWaveRepository } from "./infrastructure/firestore/repositories
 import { FirestoreCandleRepository } from "./infrastructure/firestore/repositories/firestore-candle.repository";
 import { FirestoreWave } from "./infrastructure/firestore/entities/firestorm-wave.entity";
 import { FirestoreModule } from "./infrastructure/firestore/firestore.module";
+import { BullmqModule } from "./infrastructure/bullmq/bullmq.module";
 
 @Module({
     imports: [FirestoreModule, TypeOrmModule.forRootAsync({
@@ -39,7 +40,9 @@ import { FirestoreModule } from "./infrastructure/firestore/firestore.module";
         },
         inject: [ConfigService],
       }),
-      TypeOrmModule.forFeature([TypeOrmCandle, TypeOrmWave])],
+      TypeOrmModule.forFeature([TypeOrmCandle, TypeOrmWave]),
+      BullmqModule
+    ],
       providers: [FirestoreModule, WaveAnalyzer, BinanceCandleDataProvider,
         { provide: CANDLE_DATA_PROVIDER , useClass: BinanceCandleDataProvider},
         {
