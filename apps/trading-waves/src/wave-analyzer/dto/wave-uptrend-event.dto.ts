@@ -1,4 +1,4 @@
-export class WaveUptrendEventDTO {
+export class WaveEventDTO {
     constructor(
         public readonly startdatetime: Date,
     ) { }

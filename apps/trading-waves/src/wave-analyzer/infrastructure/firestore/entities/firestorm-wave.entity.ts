@@ -19,7 +19,8 @@ export class FirestoreWave implements IWave {
     }
   
     initialize(type: WaveType, candle?: ICandle): void {
-      this.id = uuidv4();
+      //format date as yyyymmddhhmmss
+      this.id = Date.now().toString() + uuidv4();
       this.type = type;
       this.candles = candle ? [candle] : [];
       this.startDateTime = candle?.openTime || null;

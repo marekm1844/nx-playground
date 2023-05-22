@@ -10,8 +10,9 @@ import { IWave } from '../models/wave-entity.interface';
 import { ICandle } from '../models/candle-entity.interface';
 import { EventPublisher } from '../../../shared/events/event.publisher';
 import { WaveUptrendEvent } from '../events/wave-uptrend.event';
-import { WaveUptrendEventDTO } from '../../dto/wave-uptrend-event.dto';
+import { WaveEventDTO } from '../../dto/wave-uptrend-event.dto';
 import { WAVE_ANALYZER_EVENT_PUBLISHER } from '../../infrastructure/bullmq/bullmq.constants';
+import { WaveDowntrendEvent } from '../events/wave-downtrend.event';
 
 
 @Injectable()
@@ -104,6 +105,9 @@ export class WaveAnalyzer {
 
               currentWave = this.waveFactory.createWave(WaveType.Uptrend  ,candle);
               this.waves.push(currentWave);
+
+              const dto = new WaveEventDTO(currentWave.getStartDateTime());
+              this.eventPublisher.publish(new WaveUptrendEvent(dto)); 
               return;
             }
             else if (rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Uptrend)
@@ -115,6 +119,8 @@ export class WaveAnalyzer {
 
               currentWave = this.waveFactory.createWave(WaveType.Downtrend  ,candle);
               this.waves.push(currentWave);
+              const dto = new WaveEventDTO(currentWave.getStartDateTime());
+              this.eventPublisher.publish(new WaveDowntrendEvent(dto)); 
               return;
             }
             else 
@@ -127,6 +133,9 @@ export class WaveAnalyzer {
         
               currentWave = this.waveFactory.createWave(newWaveType ,candle);
               this.waves.push(currentWave);
+              const dto = new WaveEventDTO(currentWave.getStartDateTime());
+              newWaveType === WaveType.Uptrend ? this.eventPublisher.publish(new WaveUptrendEvent(dto)) : this.eventPublisher.publish(new WaveDowntrendEvent(dto));
+              
               console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
             }
             
@@ -138,6 +147,8 @@ export class WaveAnalyzer {
         Logger.log(`Number of waves: ${this.waves.length}`);
         Logger.log(`Last wave: ${this.waves.slice(-1)[0].getType()} with ${this.waves.slice(-1)[0].getCandles().length} candles`);
         Logger.log(`Last candle: ${JSON.stringify(this.waves.slice(-1)[0].getCandles().map((candle) =>({
+          //write close time as yyyy-mm-dd hh:mm:ss
+          closeTime: candle.closeTime.toISOString().replace(/T/, ' ').replace(/\..+/, ''),
           open: candle.open,
           close: candle.close,
           low: candle.low,
@@ -147,8 +158,7 @@ export class WaveAnalyzer {
       
     );
 
-    const dto = new WaveUptrendEventDTO(currentWave.getStartDateTime());
-    this.eventPublisher.publish(new WaveUptrendEvent(dto)); 
+
 
 
     }
