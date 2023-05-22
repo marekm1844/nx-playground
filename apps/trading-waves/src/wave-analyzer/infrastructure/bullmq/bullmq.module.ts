@@ -4,16 +4,27 @@ import { BullMqQueueService } from "../../../shared/events/infarstructure/bullmq
 import { IQueueService } from "../../../shared/events/queue-service.interface";
 import { EventPublisher } from "../../../shared/events/event.publisher";
 import { WAVE_ANALYZER_EVENT_PUBLISHER, WAVE_ANALYZER_QUEUE, WAVE_ANALYZER_QUEUE_SERVICE } from "./bullmq.constants";
-import Redis from 'ioredis-mock';
+import IORedis from 'ioredis';
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import fs from 'fs';
+import path from "path";
 
 @Module({
+    imports: [ConfigModule],
     providers: [
         {
             provide: WAVE_ANALYZER_QUEUE,
-            useFactory: () => {
-                const mockRedis = new Redis();
-                return new Queue('wave-analyzer-queue', {connection: mockRedis});
+            useFactory: (configService: ConfigService) => {
+                //INFO! IORedis must be use and not Redis because of the following error: ERR_SSL_WRONG_VERSION_NUMBER
+                const redis = new IORedis({
+                    host: configService.get<string>('REDIS_HOST'),
+                    port: configService.get<number>('REDIS_PORT'),
+                    username: configService.get<string>('REDIS_USER'),
+                    password: configService.get<string>('REDIS_PASSWORD'),
+                });
+                return new Queue('wave-analyzer-queue', {connection: redis});
             },
+            inject: [ConfigService],
         },
         {
             provide: WAVE_ANALYZER_QUEUE_SERVICE,
