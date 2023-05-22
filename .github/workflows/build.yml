@@ -10,12 +10,34 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      
+      - name: Cache SonarCloud packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+      
+      - name: Cache Node packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: ${{ runner.os }}-node-
+
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+        sonar-scanner \
+          -Dsonar.projectKey=marekm1844_nx-playground \
+          -Dsonar.organization=marek-public-repos \
+          -Dsonar.sources=apps/trading-waves/src \
+        
+
           
