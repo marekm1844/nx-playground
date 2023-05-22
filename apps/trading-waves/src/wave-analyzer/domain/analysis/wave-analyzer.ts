@@ -8,6 +8,10 @@ import { IWaveRepository } from '../repositories/wave-repository.interface';
 import { IWaveFactory } from '../factories/wave.factory';
 import { IWave } from '../models/wave-entity.interface';
 import { ICandle } from '../models/candle-entity.interface';
+import { EventPublisher } from '../../../shared/events/event.publisher';
+import { WaveUptrendEvent } from '../events/wave-uptrend.event';
+import { WaveUptrendEventDTO } from '../../dto/wave-uptrend-event.dto';
+import { WAVE_ANALYZER_EVENT_PUBLISHER } from '../../infrastructure/bullmq/bullmq.constants';
 
 
 @Injectable()
@@ -21,6 +25,8 @@ export class WaveAnalyzer {
     @Inject('IWaveRepository') private readonly waveRepository: IWaveRepository,
     @Inject('ICandleRepository') private readonly candleRepository: ICandleRepository,
     private readonly waveFactory: IWaveFactory,
+    @Inject(WAVE_ANALYZER_EVENT_PUBLISHER)
+    private readonly eventPublisher: EventPublisher
     ) {
   }
 
@@ -122,8 +128,6 @@ export class WaveAnalyzer {
               currentWave = this.waveFactory.createWave(newWaveType ,candle);
               this.waves.push(currentWave);
               console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
-              
-
             }
             
           }
@@ -140,9 +144,11 @@ export class WaveAnalyzer {
           high: candle.high
         }))
       )}`
+      
     );
 
-
+    const dto = new WaveUptrendEventDTO(currentWave.getStartDateTime());
+    this.eventPublisher.publish(new WaveUptrendEvent(dto)); 
 
 
     }
