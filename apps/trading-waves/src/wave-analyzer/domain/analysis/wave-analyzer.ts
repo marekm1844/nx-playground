@@ -58,109 +58,12 @@ export class WaveAnalyzer {
 
       //get last candle from current wave
       const lastCandleInCurrentWave = currentWave.getCandles().slice(-1)[0];
-      let isUptrend = false;
-       
-        //execute rules
-        this.rules
-        .forEach(async (rule) => {
-          if ( rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType()))
-          {
-            if (this.checkIfCandleExistsInCache(candle)) {
-              return;
-            }
 
-            if (rule.getRuleType() === WaveType.Unknown) {
-              Logger.log(`${rule.constructor.name}  detected in unknown wave`);
-              currentWave.addCandle(candle);
-              isUptrend = currentWave.getType() === WaveType.Uptrend;
-              return;
-            }
-            else if((rule.getRuleType() === WaveType.Uptrend) && currentWave.getType() === WaveType.Uptrend)
-            {
-
-              Logger.log(`${rule.constructor.name}  detected in uptrend wave`);
-              currentWave.addCandle(candle);
-              isUptrend = true;
-              
-              return;
-
-            }
-            else if((rule.getRuleType() === WaveType.Downtrend)  && currentWave.getType() === WaveType.Downtrend)
-            {
- 
-              Logger.log(`Start ${rule.constructor.name}  detected in downtrend wave`);
-              currentWave.addCandle(candle);
-              isUptrend = false;
-              
-              return;
-            }
-            else if (rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Downtrend)
-            {
-              Logger.log(`Start ${rule.constructor.name}  wave`);
-              currentWave.addCandle(candle);
-
-              //save current wave
-              await this.waveRepository.save(currentWave);
-              //await this.candleRepository.save({ ...candle, wave: savedWave });
-
-              currentWave = this.waveFactory.createWave(WaveType.Uptrend  ,candle);
-              this.waves.push(currentWave);
-
-              const dto = new WaveEventDTO(currentWave.getStartDateTime());
-              this.eventPublisher.publish(new WaveUptrendEvent(dto)); 
-              return;
-            }
-            else if (rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Uptrend)
-            {
-              Logger.log(`Start ${rule.constructor.name}  wave`);
-              currentWave.addCandle(candle);
-              await this.waveRepository.save(currentWave);
-              //await this.candleRepository.save({ ...candle, wave: savedWave });
-
-              currentWave = this.waveFactory.createWave(WaveType.Downtrend  ,candle);
-              this.waves.push(currentWave);
-              const dto = new WaveEventDTO(currentWave.getStartDateTime());
-              this.eventPublisher.publish(new WaveDowntrendEvent(dto)); 
-              return;
-            }
-            else 
-            {
-              await this.waveRepository.save(currentWave);
-              //await this.candleRepository.save({ ...candle, wave: savedWave });
-              
-              // If wave type has changed, create a new wave
-              const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
-        
-              currentWave = this.waveFactory.createWave(newWaveType ,candle);
-              this.waves.push(currentWave);
-              const dto = new WaveEventDTO(currentWave.getStartDateTime());
-              newWaveType === WaveType.Uptrend ? this.eventPublisher.publish(new WaveUptrendEvent(dto)) : this.eventPublisher.publish(new WaveDowntrendEvent(dto));
-              
-              console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
-            }
-            
-          }
-        });
-
-
+      await this.evaluateRules(candle, lastCandleInCurrentWave, currentWave);
+    
         //log number of waves and from last wave with number of candels in each wave and start date and type and log candle data as json
-        Logger.log(`Number of waves: ${this.waves.length}`);
-        Logger.log(`Last wave: ${this.waves.slice(-1)[0].getType()} with ${this.waves.slice(-1)[0].getCandles().length} candles`);
-        Logger.log(`Last candle: ${JSON.stringify(this.waves.slice(-1)[0].getCandles().map((candle) =>({
-          //write close time as yyyy-mm-dd hh:mm:ss
-          closeTime: candle.closeTime.toISOString().replace(/T/, ' ').replace(/\..+/, ''),
-          open: candle.open,
-          close: candle.close,
-          low: candle.low,
-          high: candle.high
-        }))
-      )}`
-      
-    );
-
-
-
-
+        // log wave details
+        this.logWaveDetails();
     }
   }
 
@@ -182,18 +85,73 @@ export class WaveAnalyzer {
 
   }
 
+  private async saveAndCreateNewWave(currentWave: IWave, newWaveType: WaveType, candle: ICandle): Promise<IWave> {
+    currentWave.addCandle(candle);
+    await this.waveRepository.save(currentWave);
+    currentWave = this.waveFactory.createWave(newWaveType, candle);
+    this.waves.push(currentWave);
+    const dto = new WaveEventDTO(currentWave.getStartDateTime());
+    newWaveType === WaveType.Uptrend 
+      ? this.eventPublisher.publish(new WaveUptrendEvent(dto)) 
+      : this.eventPublisher.publish(new WaveDowntrendEvent(dto));
+    return currentWave;
+  }
 
-  private logWaveInfo(matchingRule: IRule): void {
-    const lastWave = this.waves.slice(-1)[0];
-    const waveCandles = lastWave.getCandles();
-  
+  private async evaluateRules(candle: ICandle, lastCandleInCurrentWave: ICandle, currentWave: IWave) {
+    let isUptrend = false;
+    for (const rule of this.rules) {
+        if (rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType())) {
+            if (this.checkIfCandleExistsInCache(candle)) {
+                continue;
+            }
+
+            if (rule.getRuleType() === WaveType.Unknown) {
+                Logger.log(`${rule.constructor.name}  detected in unknown wave`);
+                currentWave.addCandle(candle);
+                isUptrend = currentWave.getType() === WaveType.Uptrend;
+            }
+            else if ((rule.getRuleType() === WaveType.Uptrend) && currentWave.getType() === WaveType.Uptrend) {
+                Logger.log(`${rule.constructor.name}  detected in uptrend wave`);
+                currentWave.addCandle(candle);
+                isUptrend = true;
+            }
+            else if ((rule.getRuleType() === WaveType.Downtrend) && currentWave.getType() === WaveType.Downtrend) {
+                Logger.log(`Start ${rule.constructor.name}  detected in downtrend wave`);
+                currentWave.addCandle(candle);
+                isUptrend = false;
+            }
+            else if (rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Downtrend) {
+                Logger.log(`Start ${rule.constructor.name}  wave`);
+                currentWave.addCandle(candle);
+                await this.saveAndCreateNewWave(currentWave, WaveType.Uptrend, candle);
+            }
+            else if (rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Uptrend) {
+                Logger.log(`Start ${rule.constructor.name}  wave`);
+                currentWave.addCandle(candle);
+                await this.saveAndCreateNewWave(currentWave, WaveType.Downtrend, candle);
+            }
+            else {
+                const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
+                Logger.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
+                await this.saveAndCreateNewWave(currentWave, newWaveType, candle);
+                isUptrend = currentWave.getType() === WaveType.Uptrend;
+            }
+        }
+    }
+}
+
+
+
+  private logWaveDetails(): void {
     Logger.log(`Number of waves: ${this.waves.length}`);
-    Logger.log(`Last wave: ${lastWave.getType()} with ${waveCandles.length} candles`);
-    Logger.log(`Last candle: ${JSON.stringify(waveCandles.map((candle) => ({
+    Logger.log(`Last wave: ${this.waves.slice(-1)[0].getType()} with ${this.waves.slice(-1)[0].getCandles().length} candles`);
+    Logger.log(`Last candle: ${JSON.stringify(this.waves.slice(-1)[0].getCandles().map((candle) =>({
+      closeTime: candle.closeTime.toISOString().replace(/T/, ' ').replace(/\..+/, ''),
       open: candle.open,
       close: candle.close,
       low: candle.low,
       high: candle.high
-    })) )}`);
-  }
+    }))
+  )}`);
+  }  
 }
