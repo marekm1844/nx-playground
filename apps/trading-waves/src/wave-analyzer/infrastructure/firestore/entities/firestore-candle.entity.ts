@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CandleColor, ICandle } from "../../../domain/models/candle-entity.interface";
-import { Type, classToPlain, plainToClass } from "class-transformer";
+import { Type, instanceToPlain } from "class-transformer";
 import * as firabase from 'firebase-admin';
 
 
@@ -70,8 +70,8 @@ export class FirestoreCandle implements ICandle {
         }
     }
 
-    toFirestoreDocument(): Record<string, any> {
-        return classToPlain(this);
+    toFirestoreDocument(): Record<string, unknown> {
+        return instanceToPlain(this);
         
       }
 
