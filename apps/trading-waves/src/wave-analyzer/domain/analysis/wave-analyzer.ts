@@ -92,54 +92,62 @@ export class WaveAnalyzer {
     this.waves.push(currentWave);
     const dto = new WaveEventDTO(currentWave.getStartDateTime());
     newWaveType === WaveType.Uptrend 
-      ? this.eventPublisher.publish(new WaveUptrendEvent(dto)) 
-      : this.eventPublisher.publish(new WaveDowntrendEvent(dto));
+      ? await this.eventPublisher.publish(new WaveUptrendEvent(dto)) 
+      : await this.eventPublisher.publish(new WaveDowntrendEvent(dto));
     return currentWave;
   }
 
+  //this method evaluates the rules and creates new waves if needed and saves the current wave
+  //if the rule type is different from the current wave type then a new wave is created
   private async evaluateRules(candle: ICandle, lastCandleInCurrentWave: ICandle, currentWave: IWave) {
-    let isUptrend = false;
-    for (const rule of this.rules) {
-        if (rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType())) {
-            if (this.checkIfCandleExistsInCache(candle)) {
-                continue;
-            }
+    const rulesToExecute = this.rules
+    .filter(rule => rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType()))
+    .filter(() => !this.checkIfCandleExistsInCache(candle));
 
-            if (rule.getRuleType() === WaveType.Unknown) {
-                Logger.log(`${rule.constructor.name}  detected in unknown wave`);
-                currentWave.addCandle(candle);
-                isUptrend = currentWave.getType() === WaveType.Uptrend;
-            }
-            else if ((rule.getRuleType() === WaveType.Uptrend) && currentWave.getType() === WaveType.Uptrend) {
-                Logger.log(`${rule.constructor.name}  detected in uptrend wave`);
-                currentWave.addCandle(candle);
-                isUptrend = true;
-            }
-            else if ((rule.getRuleType() === WaveType.Downtrend) && currentWave.getType() === WaveType.Downtrend) {
-                Logger.log(`Start ${rule.constructor.name}  detected in downtrend wave`);
-                currentWave.addCandle(candle);
-                isUptrend = false;
-            }
-            else if (rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Downtrend) {
-                Logger.log(`Start ${rule.constructor.name}  wave`);
-                currentWave.addCandle(candle);
-                await this.saveAndCreateNewWave(currentWave, WaveType.Uptrend, candle);
-            }
-            else if (rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Uptrend) {
-                Logger.log(`Start ${rule.constructor.name}  wave`);
-                currentWave.addCandle(candle);
-                await this.saveAndCreateNewWave(currentWave, WaveType.Downtrend, candle);
-            }
-            else {
-                const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
-                Logger.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
-                await this.saveAndCreateNewWave(currentWave, newWaveType, candle);
-                isUptrend = currentWave.getType() === WaveType.Uptrend;
-            }
+    for (const rule of rulesToExecute) {
+        const ruleType = rule.getRuleType();
+        const waveType = currentWave.getType();
+
+        const isUptrend = this.processRule(ruleType, waveType, rule, candle, currentWave);
+        const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
+
+        if (ruleType !== waveType && ruleType !== WaveType.Unknown) {
+            Logger.log(`Start ${rule.constructor.name}  wave`);
+            await this.saveAndCreateNewWave(currentWave, ruleType, candle);
+        } else {
+            Logger.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
+            await this.saveAndCreateNewWave(currentWave, newWaveType, candle);
         }
     }
 }
 
+
+private processRule(ruleType: WaveType, waveType: WaveType, rule: IRule, candle: ICandle, currentWave: IWave): boolean {
+  let isUptrend = false;
+
+  switch(ruleType) {
+      case WaveType.Unknown:
+          Logger.log(`${rule.constructor.name}  detected in unknown wave`);
+          currentWave.addCandle(candle);
+          isUptrend = waveType === WaveType.Uptrend;
+          break;
+      case WaveType.Uptrend:
+          if(waveType === WaveType.Uptrend) {
+              Logger.log(`${rule.constructor.name}  detected in uptrend wave`);
+              currentWave.addCandle(candle);
+              isUptrend = true;
+          }
+          break;
+      case WaveType.Downtrend:
+          if(waveType === WaveType.Downtrend) {
+              Logger.log(`Start ${rule.constructor.name}  detected in downtrend wave`);
+              currentWave.addCandle(candle);
+          }
+          break;
+  }
+
+  return isUptrend;
+}
 
 
   private logWaveDetails(): void {
