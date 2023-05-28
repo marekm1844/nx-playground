@@ -23,4 +23,7 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+bootstrap().catch(err => {
+  Logger.error('Uncaught error in bootstrap:', err);
+  process.exit(1);
+});
