@@ -1,5 +1,5 @@
 import { IDomainEvent } from "../../../shared/events/domain-event.interface";
-import { WaveEventDTO } from "../../dto/wave-uptrend-event.dto"
+import { WaveEventDTO } from "../../dto/wave-event.dto"
 
 export class WaveUptrendEvent implements IDomainEvent<WaveEventDTO> {
     constructor(

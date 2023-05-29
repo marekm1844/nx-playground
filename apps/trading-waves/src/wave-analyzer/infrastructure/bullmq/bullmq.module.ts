@@ -6,8 +6,6 @@ import { EventPublisher } from "../../../shared/events/event.publisher";
 import { WAVE_ANALYZER_EVENT_PUBLISHER, WAVE_ANALYZER_QUEUE, WAVE_ANALYZER_QUEUE_SERVICE } from "./bullmq.constants";
 import IORedis from 'ioredis';
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import fs from 'fs';
-import path from "path";
 
 @Module({
     imports: [ConfigModule],
@@ -21,6 +19,7 @@ import path from "path";
                     port: configService.get<number>('REDIS_PORT'),
                     username: configService.get<string>('REDIS_USER'),
                     password: configService.get<string>('REDIS_PASSWORD'),
+                    maxRetriesPerRequest: null,
                 });
                 return new Queue('wave-analyzer-queue', {connection: redis});
             },
