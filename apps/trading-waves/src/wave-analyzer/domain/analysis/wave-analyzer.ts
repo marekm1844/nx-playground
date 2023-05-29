@@ -101,7 +101,6 @@ export class WaveAnalyzer {
 
               //save current wave
               await this.waveRepository.save(currentWave);
-              //await this.candleRepository.save({ ...candle, wave: savedWave });
 
               currentWave = this.waveFactory.createWave(WaveType.Uptrend  ,candle);
               this.waves.push(currentWave);
@@ -114,7 +113,6 @@ export class WaveAnalyzer {
               Logger.log(`Start ${rule.constructor.name}  wave`);
               currentWave.addCandle(candle);
               await this.waveRepository.save(currentWave);
-              //await this.candleRepository.save({ ...candle, wave: savedWave });
 
               currentWave = this.waveFactory.createWave(WaveType.Downtrend  ,candle);
               this.waves.push(currentWave);
@@ -125,7 +123,6 @@ export class WaveAnalyzer {
             else 
             {
               await this.waveRepository.save(currentWave);
-              //await this.candleRepository.save({ ...candle, wave: savedWave });
               
               // If wave type has changed, create a new wave
               const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;

@@ -1,5 +1,4 @@
 import { Processor, WorkerHost } from "@nestjs/bullmq";
-import { WaveUptrendEvent } from "../../../wave-analyzer/domain/events/wave-uptrend.event";
 import { Job } from "bullmq";
 import { Notification } from "../../domain/models/notification.entity";
 import { INotificationService } from "../../domain/notification-service.interface";
@@ -21,7 +20,7 @@ export class DowntrendEventProcessor extends WorkerHost {
   async process(job: Job<WaveDowntrendEvent>): Promise<void> {
     const event = job.data;
     const notification: Notification = {
-      id: Date.now().toString() + uuidv4(),
+      id: Math.floor(Date.now() / 1000).toString() +'-'+ uuidv4(),
       type: NotificationType.SELL,
       symbol: event.data.symbol,
       price: event.data.price,
@@ -36,3 +35,5 @@ export class DowntrendEventProcessor extends WorkerHost {
   }
 
 }
+
+

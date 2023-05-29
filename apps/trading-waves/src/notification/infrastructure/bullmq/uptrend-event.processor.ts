@@ -22,7 +22,7 @@ export class UptrendEventProcessor extends WorkerHost {
   async process(job: Job<WaveUptrendEvent>): Promise<void> {
     const event = job.data;
     const notification: Notification = {
-      id: Date.now().toString() + uuidv4(),
+      id: Math.floor(Date.now() / 1000).toString() +'-'+ uuidv4(),
       type: NotificationType.BUY,
       symbol: event.data.symbol,
       price: event.data.price,
