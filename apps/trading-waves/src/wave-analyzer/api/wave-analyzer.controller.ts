@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { WaveAnalyzer } from "../domain/analysis/wave-analyzer";
 import { UptrendCorpseCompareRule } from "../domain/rules/uptrend-corpse-compare-rule";
 import { DowntrendCorpseCompareRule } from "../domain/rules/downtrend-corpse-compare-rule";
@@ -11,20 +11,16 @@ import { DowntrendShadowCompareRule } from "../domain/rules/downtrend-shadow-com
 export class WaveAnalyzerController {
   constructor(private readonly waveAnalyzer: WaveAnalyzer) {}
 
-  @Get('/start')
-  start(
-    @Query('symbol') symbol: string,
-    @Query('interval') interval: string,
-  ): string {
+  @Post('/start')
+  async start(@Body('symbol') symbol: string, @Body('interval') interval: string): Promise<string> {
     this.waveAnalyzer.addRule(new UptrendCorpseCompareRule().or(new UptrendShadowCompareRule().or(new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule()))));
     this.waveAnalyzer.addRule(new DowntrendCorpseCompareRule().or(new DowntrendShadowCompareRule().or(new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule()))));
-    const s1 = 'BTCUSDT';
-    const s2 = '30m'
-    this.waveAnalyzer.analyze(s1, s2).catch(error => {
+
+    this.waveAnalyzer.analyze(symbol, interval).catch(error => {
       // Handle your error here
       console.error('An error occurred during analysis:', error);
     });;
-    return `Wave analysis started for ${s1} with ${s2} interval`;
+    return `Wave analysis started for ${symbol} with ${interval} interval`;
   }
 
   @Get('/stop')

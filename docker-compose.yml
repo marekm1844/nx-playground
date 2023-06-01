@@ -10,6 +10,6 @@ services:
       args:
         TARGETPLATFORM: linux/amd64
     env_file:
-      - ./apps/trading-waves/.env
+      - ./apps/trading-waves/.env.prod
     ports:
       - 3000:3000

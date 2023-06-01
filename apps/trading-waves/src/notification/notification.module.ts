@@ -7,6 +7,7 @@ import { BullModule } from '@nestjs/bullmq';
 import IORedis from 'ioredis';
 import { UptrendEventProcessor } from './infrastructure/bullmq/uptrend-event.processor';
 import { DowntrendEventProcessor } from './infrastructure/bullmq/downtrend-event.processor';
+import { TelegramBotProvider } from './infrastructure/telegram-bot.provider';
 
 @Module({
   imports: [ConfigModule,
@@ -28,13 +29,7 @@ import { DowntrendEventProcessor } from './infrastructure/bullmq/downtrend-event
         removeOnComplete: true,
     } }),],
   providers: [
-    {
-      provide: 'TELEGRAM_BOT',
-      useFactory: (configService: ConfigService) => {
-        return new TelegramBot(configService.get<string>('TELEGRAM_BOT_TOKEN'), {polling: true});
-      },
-      inject: [ConfigService],
-    },
+    TelegramBotProvider,
     {
         provide: 'INotificationService',
         useClass: TelegramService,

@@ -1,0 +1,20 @@
+#Get to start API
+https://oyster-app-r8vhv.ondigitalocean.app/api/start
+
+###Start process and configure it  PROD
+POST https://oyster-app-r8vhv.ondigitalocean.app/api/start HTTP/1.1
+content-type: application/json
+{
+  "symbol": "BTCUSDT",
+  "interval": "1m"
+}
+
+###Start process and configure it  TEST
+
+POST http://localhost:3000/api/start HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "BTCUSDT",
+  "interval": "1m"
+}
