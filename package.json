@@ -2,6 +2,9 @@
   "name": "nx-playground",
   "version": "0.0.0",
   "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
     "console": "node dist/src/console",
     "start": "nx serve nx-nest-playground",
@@ -9,7 +12,7 @@
     "test-waves": "nx run trading-waves:test",
     "start-waves": "nx serve trading-waves",
     "seed": "nx run nx-nest-playground:console seed",
-    "build": "nx build nx-nest-playground"
+    "build": "nx build trading-waves"
   },
   "private": true,
   "dependencies": {
@@ -68,7 +71,6 @@
     "prettier": "^2.6.2",
     "ts-jest": "^29.0.5",
     "ts-node": "10.9.1",
-    "typeorm-seeding": "^1.6.1",
     "typescript": "~4.9.5"
   }
 }

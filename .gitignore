@@ -48,3 +48,7 @@ Thumbs.db
 #SonarQube
 .scannerwork
 apps/trading-waves/.env
+
+
+#Docker
+docker-compose.yml
