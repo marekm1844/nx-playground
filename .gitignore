@@ -48,3 +48,6 @@ Thumbs.db
 
 #SonarQube
 .scannerwork
+
+#Docker
+docker-compose.yml

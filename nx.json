@@ -3,15 +3,14 @@
   "npmScope": "nx-playground",
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/nx-cloud",
+      "runner": "nx/tasks-runners/default",
       "options": {
         "cacheableOperations": [
           "build",
           "lint",
           "test",
           "e2e"
-        ],
-        "accessToken": "MDczZGU2MjMtZjJiNS00YWE5LTk3NTQtYzM2MGNmNWUyZTYyfHJlYWQtd3JpdGU="
+        ]
       }
     }
   },
