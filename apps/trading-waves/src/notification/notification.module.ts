@@ -6,6 +6,7 @@ import { TelegramService } from './infrastructure/services/telegram.service';
 import { BullModule } from '@nestjs/bullmq';
 import IORedis from 'ioredis';
 import { UptrendEventProcessor } from './infrastructure/bullmq/uptrend-event.processor';
+import { DowntrendEventProcessor } from './infrastructure/bullmq/downtrend-event.processor';
 
 @Module({
   imports: [ConfigModule,
@@ -39,7 +40,8 @@ import { UptrendEventProcessor } from './infrastructure/bullmq/uptrend-event.pro
         useClass: TelegramService,
     },
     TelegramService,
-    UptrendEventProcessor
+    UptrendEventProcessor,
+    DowntrendEventProcessor
   ],
   exports: [TelegramService],
 })
