@@ -19,7 +19,7 @@ export class WaveAnalyzerController {
     this.waveAnalyzer.addRule(new UptrendCorpseCompareRule().or(new UptrendShadowCompareRule().or(new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule()))));
     this.waveAnalyzer.addRule(new DowntrendCorpseCompareRule().or(new DowntrendShadowCompareRule().or(new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule()))));
     const s1 = 'BTCUSDT';
-    const s2 = '1m'
+    const s2 = '30m'
     this.waveAnalyzer.analyze(s1, s2).catch(error => {
       // Handle your error here
       console.error('An error occurred during analysis:', error);

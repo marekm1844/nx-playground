@@ -18,6 +18,7 @@ node_modules
 *.sublime-workspace
 
 # Variables 
+!.env
 .env.test
 .env.prod
 
@@ -47,8 +48,4 @@ Thumbs.db
 
 #SonarQube
 .scannerwork
-apps/trading-waves/.env
-
-
-#Docker
-docker-compose.yml
+!apps/trading-waves/.env
