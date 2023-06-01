@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  trading-waves:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./apps/trading-waves/Dockerfile
+      target: prod
+      args:
+        TARGETPLATFORM: linux/amd64
+    env_file:
+      - ./apps/trading-waves/.env
+    ports:
+      - 3000:3000
