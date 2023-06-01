@@ -1,0 +1,8 @@
+.dockerignore
+node_modules
+dist
+docs
+.github
+.husky
+.vscode
+tmp
