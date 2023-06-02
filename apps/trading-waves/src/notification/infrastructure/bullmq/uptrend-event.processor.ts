@@ -7,8 +7,9 @@ import { NotificationType } from "../../domain/models/notification-type.enum";
 import { Inject, Logger } from "@nestjs/common";
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigService } from "@nestjs/config";
+import { UPTREND_QUEUE } from "../../../shared/events/infarstructure/redis-queue.constant";
 
-@Processor('wave-analyzer-queue') // the queue name should match the queue that publishes the event
+@Processor(UPTREND_QUEUE.toString()) // the queue name should match the queue that publishes the event
 export class UptrendEventProcessor extends WorkerHost {
 
   constructor(
@@ -20,6 +21,7 @@ export class UptrendEventProcessor extends WorkerHost {
 
 
   async process(job: Job<WaveUptrendEvent>): Promise<void> {
+    Logger.debug(job.asJSON());
     const event = job.data;
     const notification: Notification = {
       id: Math.floor(Date.now() / 1000).toString() +'-'+ uuidv4(),

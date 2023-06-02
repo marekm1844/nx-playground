@@ -1,4 +1,6 @@
+import { IDomainEvent } from "./domain-event.interface";
+
 export interface IQueueService {
-    add<T>(name: string, data: T): Promise<void>;
+    add(data: IDomainEvent): Promise<void>;
   }
   

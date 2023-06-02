@@ -47,6 +47,7 @@ describe('UptrendEventProcessor', () => {
     const waveUptrendEvent: WaveUptrendEvent = {
       data: waveEventDTO,
       occurredOn: new Date(),
+      name: 'WaveUptrendEvent',
     };
 
     const testJob: Job<WaveUptrendEvent> = {

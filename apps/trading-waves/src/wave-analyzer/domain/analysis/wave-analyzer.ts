@@ -3,16 +3,18 @@ import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/
 import { IRule } from '../rules/rule.interface';
 import { WaveType } from '../models/wave-type.enum';
 import { BaseRule } from '../rules/base-rule';
-import { ICandleRepository } from '../repositories/candle-repository.interface';
 import { IWaveRepository } from '../repositories/wave-repository.interface';
 import { IWaveFactory } from '../factories/wave.factory';
 import { IWave } from '../models/wave-entity.interface';
 import { ICandle } from '../models/candle-entity.interface';
-import { EventPublisher } from '../../../shared/events/event.publisher';
 import { WaveUptrendEvent } from '../events/wave-uptrend.event';
 import { WaveEventDTO } from '../../dto/wave-event.dto';
-import { WAVE_ANALYZER_EVENT_PUBLISHER } from '../../infrastructure/bullmq/bullmq.constants';
 import { WaveDowntrendEvent } from '../events/wave-downtrend.event';
+import { DOWNTREND_QUEUE, DOWNTREND_QUEUE_SERVICE, UPTREND_QUEUE, UPTREND_QUEUE_SERVICE } from '../../../shared/events/infarstructure/redis-queue.constant';
+import { IQueueService } from '../../../shared/events/queue-service.interface';
+import { ITrendPublisherStrategy } from '../../../shared/events/domain/trend-strategy.interface';
+import { WaveUptrendEventStrategy } from '../../../shared/events/domain/waveuptrend-strategy.publisher';
+import { WaveDowntrendEventStrategy } from '../../../shared/events/domain/wavedowntrend-stratefy.publisher';
 
 
 @Injectable()
@@ -21,14 +23,17 @@ export class WaveAnalyzer {
   private waves: IWave[] = [];
   private rules: IRule[] = [];
   private ruleEvaluationCache: string[] = [];
+  private uptrendStrategy: ITrendPublisherStrategy;
+  private downtrendStrategy: ITrendPublisherStrategy;
 
     constructor(@Inject(CANDLE_DATA_PROVIDER)  private readonly candleDataProvider: ICandleDataProvider,
     @Inject('IWaveRepository') private readonly waveRepository: IWaveRepository,
-    @Inject('ICandleRepository') private readonly candleRepository: ICandleRepository,
     private readonly waveFactory: IWaveFactory,
-    @Inject(WAVE_ANALYZER_EVENT_PUBLISHER)
-    private readonly eventPublisher: EventPublisher
+    @Inject(UPTREND_QUEUE_SERVICE) private readonly uptrendQueue: IQueueService,
+    @Inject(DOWNTREND_QUEUE_SERVICE) private readonly downtrendQueue: IQueueService,
     ) {
+      this.uptrendStrategy = new WaveUptrendEventStrategy(this.uptrendQueue);
+      this.downtrendStrategy = new WaveDowntrendEventStrategy(this.downtrendQueue);
   }
 
   addRule(rule: IRule): void {
@@ -104,8 +109,6 @@ export class WaveAnalyzer {
 
               currentWave = this.waveFactory.createWave(WaveType.Uptrend  ,candle);
               this.waves.push(currentWave);
-              const dto = new WaveEventDTO(currentWave.getStartDateTime(), currentWave.getLastCandle().close,symbol,interval);
-              await this.eventPublisher.publish(new WaveUptrendEvent(dto)); 
               return;
             }
             else if (rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Uptrend)
@@ -116,8 +119,6 @@ export class WaveAnalyzer {
 
               currentWave = this.waveFactory.createWave(WaveType.Downtrend  ,candle);
               this.waves.push(currentWave);
-              const dto = new WaveEventDTO(currentWave.getStartDateTime(), currentWave.getLastCandle().close,symbol,interval);
-              await this.eventPublisher.publish(new WaveDowntrendEvent(dto)); 
               return;
             }
             else 
@@ -129,14 +130,13 @@ export class WaveAnalyzer {
         
               currentWave = this.waveFactory.createWave(newWaveType ,candle);
               this.waves.push(currentWave);
-              const dto = new WaveEventDTO(currentWave.getStartDateTime(), currentWave.getLastCandle().close,symbol,interval);
-              newWaveType === WaveType.Uptrend ? await this.eventPublisher.publish(new WaveUptrendEvent(dto)) : await this.eventPublisher.publish(new WaveDowntrendEvent(dto));
               console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
             }
             
           }
         });
 
+       await this.publishWaveEvent(symbol,interval);
    
         //log number of waves and from last wave with number of candels in each wave and start date and type and log candle data as json
         this.logWaveDetails();
@@ -174,6 +174,16 @@ export class WaveAnalyzer {
       }))
     )}`
   );
+  }
+
+  private async publishWaveEvent(symbol: string, interval: string)
+  {
+    if(this.waves.slice(-1)[0].getCandles().length === 2)
+    {
+    const lastWave = this.waves.slice(-1)[0];
+    const dto = new WaveEventDTO(lastWave.getStartDateTime(), lastWave.getLastCandle().close,symbol,interval);
+    lastWave.getType() === WaveType.Uptrend ? await this.uptrendStrategy.publishEvent(new WaveUptrendEvent(dto)) : await this.downtrendStrategy.publishEvent(new WaveDowntrendEvent(dto));
+    }
   }
 
 }

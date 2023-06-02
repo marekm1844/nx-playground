@@ -7,8 +7,9 @@ import { Inject, Logger } from "@nestjs/common";
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigService } from "@nestjs/config";
 import { WaveDowntrendEvent } from "../../../wave-analyzer/domain/events/wave-downtrend.event";
+import { DOWNTREND_QUEUE } from "../../../shared/events/infarstructure/redis-queue.constant";
 
-@Processor('wave-analyzer-queue') // the queue name should match the queue that publishes the event
+@Processor(DOWNTREND_QUEUE.toString(),) // the queue name should match the queue that publishes the event
 export class DowntrendEventProcessor extends WorkerHost {
 
   constructor(
@@ -18,6 +19,8 @@ export class DowntrendEventProcessor extends WorkerHost {
   }
 
   async process(job: Job<WaveDowntrendEvent>): Promise<void> {
+    Logger.debug(job.asJSON());
+
     const event = job.data;
     const notification: Notification = {
       id: Math.floor(Date.now() / 1000).toString() +'-'+ uuidv4(),
