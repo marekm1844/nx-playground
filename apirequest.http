@@ -7,6 +7,7 @@ http://localhost:3000/api/stop
 ###PROD: Start process and configure it  PROD
 POST https://oyster-app-r8vhv.ondigitalocean.app/api/start HTTP/1.1
 content-type: application/json
+
 {
   "symbol": "BTCUSDT",
   "interval": "30m"

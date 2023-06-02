@@ -9,11 +9,13 @@ import { ICandle } from '../domain/models/candle-entity.interface';
 export class BinanceCandleDataProvider implements ICandleDataProvider {
   private readonly binanceWebSocketUrl: string;
   private ws: WebSocket | null;
+  private wasCloseIntentional: boolean;
 
   constructor(
     private readonly candleFactory: ICandleFactory,) {
     this.binanceWebSocketUrl = 'wss://stream.binance.com:9443/ws';
     this.ws = null;
+    this.wasCloseIntentional = false;
   }
 
   async *candles(symbol: string, interval: string): AsyncIterableIterator<ICandle> {
@@ -63,7 +65,9 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
 
     this.ws.on('close', () => {
       console.log('WebSocket closed.');
-      this.reconnect(symbol, interval);
+      if (!this.wasCloseIntentional) {
+        this.reconnect(symbol, interval);
+      }
     });
 
     while (true) {
@@ -105,6 +109,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
 
   private reconnect(symbol: string, interval: string): void {
     console.log('Reconnecting WebSocket...');
+    this.wasCloseIntentional = false;
     this.close();
     setTimeout(() => {
       this.connectWebSocket(`${this.binanceWebSocketUrl}/${symbol.toLowerCase()}@kline_${interval}`);
@@ -114,6 +119,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
 
   close(): void {
     if (this.ws) {
+      this.wasCloseIntentional = true;
       this.ws.close();
       this.ws = null;
     }
