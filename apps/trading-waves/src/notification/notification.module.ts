@@ -7,10 +7,25 @@ import { DowntrendEventProcessor } from './infrastructure/bullmq/downtrend-event
 import { TelegramBotProvider } from './infrastructure/telegram-bot.provider';
 import { QueueModule } from '../shared/events/infarstructure/redis-queue.module';
 import { BullModule } from '@nestjs/bullmq';
-import { DOWNTREND_QUEUE, UPTREND_QUEUE } from '../shared/events/infarstructure/redis-queue.constant';
+import { DOWNTREND_QUEUE, REDIS_CONNECTION, UPTREND_QUEUE } from '../shared/events/infarstructure/redis-queue.constant';
 
 @Module({
-  imports: [ConfigModule,QueueModule, BullModule.registerQueue({ name: UPTREND_QUEUE }), BullModule.registerQueue({ name: DOWNTREND_QUEUE })],
+  imports: [ConfigModule,QueueModule,
+    BullModule.registerQueueAsync({
+      name: UPTREND_QUEUE,
+      inject: [REDIS_CONNECTION],
+      useFactory: async (redisConnection: unknown) => ({
+        connection: redisConnection,
+      }),
+    }),
+    BullModule.registerQueueAsync({
+      name: DOWNTREND_QUEUE,
+      inject: [REDIS_CONNECTION],
+      useFactory: async (redisConnection: unknown) => ({
+        connection: redisConnection,
+      }),
+    }),
+  ],
   providers: [
     TelegramBotProvider,
     {

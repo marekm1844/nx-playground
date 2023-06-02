@@ -10,7 +10,7 @@ import { ICandle } from '../models/candle-entity.interface';
 import { WaveUptrendEvent } from '../events/wave-uptrend.event';
 import { WaveEventDTO } from '../../dto/wave-event.dto';
 import { WaveDowntrendEvent } from '../events/wave-downtrend.event';
-import { DOWNTREND_QUEUE, DOWNTREND_QUEUE_SERVICE, UPTREND_QUEUE, UPTREND_QUEUE_SERVICE } from '../../../shared/events/infarstructure/redis-queue.constant';
+import { DOWNTREND_QUEUE_SERVICE, UPTREND_QUEUE_SERVICE } from '../../../shared/events/infarstructure/redis-queue.constant';
 import { IQueueService } from '../../../shared/events/queue-service.interface';
 import { ITrendPublisherStrategy } from '../../../shared/events/domain/trend-strategy.interface';
 import { WaveUptrendEventStrategy } from '../../../shared/events/domain/waveuptrend-strategy.publisher';

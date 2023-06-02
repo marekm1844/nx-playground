@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Post } from "@nestjs/common";
 import { WaveAnalyzer } from "../domain/analysis/wave-analyzer";
 import { UptrendCorpseCompareRule } from "../domain/rules/uptrend-corpse-compare-rule";
 import { DowntrendCorpseCompareRule } from "../domain/rules/downtrend-corpse-compare-rule";
