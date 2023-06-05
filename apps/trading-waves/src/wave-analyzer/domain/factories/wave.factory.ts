@@ -14,18 +14,18 @@ export class IWaveFactory {
     //based on the implementation, return the correct wave
     //for example, if the implementation is 'firestore', return a FirestoreWave
     //if the implementation is 'typeorm', return a TypeOrmWave
-    createWave(type: WaveType, candle?: ICandle): IWave {
+    createWave(type: WaveType, symbol: string, interval: string, candle?: ICandle): IWave {
       switch (this.implementation) {
         case 'typeorm':
             {
             const wave = new TypeOrmWave();
-            wave.initialize(type, candle);
+            wave.initialize(type, symbol, interval, candle);
             return wave;
             }
         case 'firestore':
           {
             const wave = new FirestoreWave();
-            wave.initialize(type, candle);
+            wave.initialize(type, symbol, interval, candle);
             return wave;
           }
         default:

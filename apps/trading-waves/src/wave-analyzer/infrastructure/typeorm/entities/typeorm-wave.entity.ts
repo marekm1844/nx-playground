@@ -29,8 +29,17 @@ export class TypeOrmWave implements IWave {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  initialize(type: WaveType, candle?: TypeOrmCandle) {
+  @Column()
+  interval: string;
+
+  @Column()
+  symbol: string;
+
+
+  initialize(type: WaveType, symbol: string, interval: string, candle?: TypeOrmCandle) {
     this.type = type;
+    this.interval = interval;
+    this.symbol = symbol;
     if (candle) {
       this.addCandle(candle);
       this.startDateTime = candle.openTime;

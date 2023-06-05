@@ -13,12 +13,14 @@ export class FirestoreWave implements IWave {
     candles: ICandle[];
     createdAt: Date;
     updatedAt: Date;
+    interval: string;
+    symbol: string;
   
     constructor(init?: Partial<FirestoreWave>) {
       Object.assign(this, init);
     }
   
-    initialize(type: WaveType, candle?: ICandle): void {
+    initialize(type: WaveType, symbol: string, interval: string , candle?: ICandle, ): void {
       //format date as yyyymmddhhmmss
       this.id = Date.now().toString() + uuidv4();
       this.type = type;
@@ -27,6 +29,8 @@ export class FirestoreWave implements IWave {
       this.endDateTime = candle?.closeTime || null;
       this.createdAt = firabase.firestore.Timestamp.now().toDate();
       this.updatedAt = firabase.firestore.Timestamp.now().toDate();
+      this.interval = interval;
+      this.symbol = symbol;
     }
   
     addCandle(newCandle: ICandle): boolean {

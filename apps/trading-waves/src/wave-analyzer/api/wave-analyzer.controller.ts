@@ -16,16 +16,17 @@ export class WaveAnalyzerController {
     this.waveAnalyzer.addRule(new UptrendCorpseCompareRule().or(new UptrendShadowCompareRule().or(new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule()))));
     this.waveAnalyzer.addRule(new DowntrendCorpseCompareRule().or(new DowntrendShadowCompareRule().or(new CandleWithinPreviousCandleRule().or(new CloseWithinPreviousCorpseRule()))));
 
-    this.waveAnalyzer.analyze(symbol, interval).catch(error => {
-      // Handle your error here
-      console.error('An error occurred during analysis:', error);
-    });;
+    this.waveAnalyzer.analyze(symbol, interval)
+    
     return `Wave analysis started for ${symbol} with ${interval} interval`;
   }
 
-  @Get('/stop')
-  stop(): string {
-    this.waveAnalyzer.stop();
+  @Post('/stop')
+  stop( 
+    @Body('symbol') symboil: string,
+    @Body('interval') interval: string,
+  ): string {
+    this.waveAnalyzer.stop(symboil, interval);
     return 'Wave analysis stopped';
   }
 }

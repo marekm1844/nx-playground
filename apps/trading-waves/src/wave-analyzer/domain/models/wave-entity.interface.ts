@@ -10,6 +10,8 @@ export interface IWave {
     updatedAt: Date;
     startDateTime: Date | null;
     endDateTime: Date | null;
+    interval : string;
+    symbol : string;
 
 
     addCandle(newCandle: ICandle): boolean;

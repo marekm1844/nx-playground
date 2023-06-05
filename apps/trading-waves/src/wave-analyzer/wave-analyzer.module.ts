@@ -1,13 +1,11 @@
 import { Module } from "@nestjs/common";
 import { WaveAnalyzer } from "./domain/analysis/wave-analyzer";
-import { BinanceCandleDataProvider } from "./infrastructure/binance-candle-data.provider";
+import { BinanceCandleDataProvider } from "./infrastructure/websocket/binance-candle-data.provider";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { TypeOrmCandle } from "./infrastructure/typeorm/entities/candle.entity";
 import { WaveAnalyzerController } from "./api/wave-analyzer.controller";
 import { CANDLE_DATA_PROVIDER } from "./infrastructure/icandle-data-provider.interface";
 import { TypeOrmWave } from "./infrastructure/typeorm/entities/typeorm-wave.entity";
-import { WaveRepository } from "./infrastructure/repositories/wave.repository";
-import { TypeOrmCandleRepository } from "./infrastructure/repositories/typeorm-candle.repository";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { glob } from "glob";
 import path from "path";
@@ -19,6 +17,7 @@ import { FirestoreCandleRepository } from "./infrastructure/firestore/repositori
 import { FirestoreWave } from "./infrastructure/firestore/entities/firestorm-wave.entity";
 import { FirestoreModule } from "./infrastructure/firestore/firestore.module";
 import { BullmqModule } from "./infrastructure/bullmq/bullmq.module";
+import { BinanceConnectionPool } from "./infrastructure/websocket/binance-connectionpool";
 
 @Module({
     imports: [FirestoreModule, TypeOrmModule.forRootAsync({
@@ -43,7 +42,7 @@ import { BullmqModule } from "./infrastructure/bullmq/bullmq.module";
       TypeOrmModule.forFeature([TypeOrmCandle, TypeOrmWave]),
       BullmqModule
     ],
-      providers: [FirestoreModule, WaveAnalyzer, BinanceCandleDataProvider,
+      providers: [FirestoreModule, WaveAnalyzer, BinanceCandleDataProvider,BinanceConnectionPool, 
         { provide: CANDLE_DATA_PROVIDER , useClass: BinanceCandleDataProvider},
         {
             provide: 'ICandle',
@@ -71,6 +70,10 @@ import { BullmqModule } from "./infrastructure/bullmq/bullmq.module";
           provide: 'CANDLE_IMPLEMENTATION_TYPE',
           useValue: 'firestore', // or 'firestore', depending on your configuration
         },
+        {
+          provide: 'IWebSocketConnectionPool',
+          useClass: BinanceConnectionPool,
+        }
         
     ],
     controllers: [WaveAnalyzerController],

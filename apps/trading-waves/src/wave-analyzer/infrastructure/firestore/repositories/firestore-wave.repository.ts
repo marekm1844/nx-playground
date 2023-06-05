@@ -6,9 +6,13 @@ import { FirestoreClient } from "../firestore.client";
 
 @Injectable()
 export class FirestoreWaveRepository implements IWaveRepository {
-  private readonly collection = this.firestoreClient.firestore.collection('waves');
+  private readonly collection;
 
-  constructor( private firestoreClient: FirestoreClient ) {}
+  constructor( private firestoreClient: FirestoreClient ) {
+    const env = process.env.NODE_ENV || 'development';
+    const collectionName = env === 'production' ? 'waves' : 'waves_test';
+    this.collection = this.firestoreClient.firestore.collection(collectionName);
+  }
 
   async save(wave: IWave): Promise<IWave> {
     const firestoreWave = wave as FirestoreWave;
@@ -17,7 +21,7 @@ export class FirestoreWaveRepository implements IWaveRepository {
     return FirestoreWave.fromFirestoreDocument(savedWaveDocument);  
   }
 
-  async getWaves(): Promise<IWave[]> {
+  async getWaves(symbol: string, interval: string): Promise<IWave[]> {
     throw new Error("Method not implemented.");
   }
 }

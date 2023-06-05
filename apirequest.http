@@ -1,7 +1,7 @@
 #PROD: Stop Analyze   API
 https://oyster-app-r8vhv.ondigitalocean.app/api/stop
 
-###PROD: Stop Analyze   API
+###TEST: Stop Analyze   API
 http://localhost:3000/api/stop
 
 ###PROD: Start process and configure it  PROD
@@ -16,6 +16,16 @@ content-type: application/json
 ### TEST:Start process and configure it  TEST
 
 POST http://localhost:3000/api/start HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "BTCUSDT",
+  "interval": "3m"
+}
+
+### TEST:Stop  TEST
+
+POST http://localhost:3000/api/stop HTTP/1.1
 content-type: application/json
 
 {
