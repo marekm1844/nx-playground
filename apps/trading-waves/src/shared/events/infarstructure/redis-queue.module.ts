@@ -1,4 +1,4 @@
-import { Module, Global, DynamicModule } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import IORedis from 'ioredis';
 import { Queue } from 'bullmq';
@@ -31,28 +31,26 @@ import { BullMqQueueService } from './bullmq-queue.service';
       inject: [REDIS_CONNECTION],
     },
     {
-        provide: DOWNTREND_QUEUE,
-        useFactory: (redisConnection: IORedis) => {
-          return new Queue(DOWNTREND_QUEUE, { connection: redisConnection });
-        },
-        inject: [REDIS_CONNECTION],
+      provide: DOWNTREND_QUEUE,
+      useFactory: (redisConnection: IORedis) => {
+        return new Queue(DOWNTREND_QUEUE, { connection: redisConnection });
       },
-      {
-        provide: UPTREND_QUEUE_SERVICE,
-        useFactory: (uptrendQueue: Queue) => {
-            return new BullMqQueueService(uptrendQueue);
-            }
-        ,
-        inject: [UPTREND_QUEUE],
+      inject: [REDIS_CONNECTION],
+    },
+    {
+      provide: UPTREND_QUEUE_SERVICE,
+      useFactory: (uptrendQueue: Queue) => {
+        return new BullMqQueueService(uptrendQueue);
       },
-      {
-        provide: DOWNTREND_QUEUE_SERVICE,
-        useFactory: (downtrendQueue: Queue) => {
-            return new BullMqQueueService(downtrendQueue);
-            }
-        ,
-        inject: [DOWNTREND_QUEUE],
-      }
+      inject: [UPTREND_QUEUE],
+    },
+    {
+      provide: DOWNTREND_QUEUE_SERVICE,
+      useFactory: (downtrendQueue: Queue) => {
+        return new BullMqQueueService(downtrendQueue);
+      },
+      inject: [DOWNTREND_QUEUE],
+    },
   ],
   exports: [REDIS_CONNECTION, UPTREND_QUEUE, DOWNTREND_QUEUE, UPTREND_QUEUE_SERVICE, DOWNTREND_QUEUE_SERVICE],
 })

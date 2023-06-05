@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ICandleDataProvider } from '../icandle-data-provider.interface';
-import {  } from '../typeorm/entities/candle.entity';
+import {} from '../typeorm/entities/candle.entity';
 import { ICandleFactory } from '../../domain/factories/candle.factory';
 import { ICandle } from '../../domain/models/candle-entity.interface';
 import { IWebSocketConnectionPool } from '../../../shared/events/infarstructure/websocket-connection-pool.interface';
@@ -10,10 +10,7 @@ import { WebSocketNotFoundError } from './websocket-notfound.error';
 export class BinanceCandleDataProvider implements ICandleDataProvider {
   private wasCloseIntentional: boolean;
 
-  constructor(
-    private readonly candleFactory: ICandleFactory,
-    @Inject('IWebSocketConnectionPool') private readonly connectionPool: IWebSocketConnectionPool) 
-    {
+  constructor(private readonly candleFactory: ICandleFactory, @Inject('IWebSocketConnectionPool') private readonly connectionPool: IWebSocketConnectionPool) {
     this.wasCloseIntentional = false;
   }
 
@@ -32,46 +29,48 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     let resolve: ((value: ICandle | PromiseLike<ICandle>) => void) | null = null;
 
     ws.on('message', (message: string) => {
-      
-        const data = JSON.parse(message);
-        const candleData = data.k;
+      const data = JSON.parse(message);
+      const candleData = data.k;
 
-        const candle = this.candleFactory.createCandle({
-          openTime: candleData.t,
-          open: candleData.o,
-          high: candleData.h,
-          low: candleData.l,
-          close: candleData.c,
-          volume: candleData.v,
-          closeTime: candleData.T,
-          quoteAssetVolume: candleData.q,
-          numberOfTrades: candleData.n,
-          takerBuyBaseAssetVolume: candleData.V,
-          takerBuyQuoteAssetVolume: candleData.Q,
-          ignore: candleData.B,
-          completed: candleData.x,
-        });
+      const candle = this.candleFactory.createCandle({
+        openTime: candleData.t,
+        open: candleData.o,
+        high: candleData.h,
+        low: candleData.l,
+        close: candleData.c,
+        volume: candleData.v,
+        closeTime: candleData.T,
+        quoteAssetVolume: candleData.q,
+        numberOfTrades: candleData.n,
+        takerBuyBaseAssetVolume: candleData.V,
+        takerBuyQuoteAssetVolume: candleData.Q,
+        ignore: candleData.B,
+        completed: candleData.x,
+      });
 
       if (candle.completed) {
-            
-      if (resolve) {
-        resolve(candle);
-        resolve = null;
-      } else {
-        messageQueue.push(message);
+        if (resolve) {
+          resolve(candle);
+          resolve = null;
+        } else {
+          messageQueue.push(message);
+        }
       }
-    }
     });
 
-    ws.on('error', (error) => {
+    ws.on('error', error => {
       console.error('WebSocket error:', error);
-      this.reconnect(symbol, interval);
+      this.reconnect(symbol, interval).catch(err => {
+        Logger.error(err);
+      });
     });
 
     ws.on('close', () => {
       console.log('WebSocket closed.');
       if (!this.wasCloseIntentional) {
-        this.reconnect(symbol, interval);
+        this.reconnect(symbol, interval).catch(err => {
+          Logger.error(err);
+        });
       }
     });
 
@@ -101,13 +100,12 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
           yield candle;
         }
       } else {
-        yield new Promise<ICandle>((r) => {
+        yield new Promise<ICandle>(r => {
           resolve = r;
         });
       }
     }
   }
-
 
   private async reconnect(symbol: string, interval: string): Promise<void> {
     console.log('Reconnecting WebSocket...');
@@ -125,7 +123,6 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     }
   }
 
-
   close(symbol: string, interval: string): void {
     const wsOrError = this.connectionPool.get(symbol, interval);
     if (wsOrError instanceof Error) {
@@ -135,5 +132,4 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     this.wasCloseIntentional = true;
     this.connectionPool.disconnect(symbol, interval);
   }
-  
 }
