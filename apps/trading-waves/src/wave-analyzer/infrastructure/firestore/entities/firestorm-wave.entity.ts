@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { ICandle } from '../../../domain/models/candle-entity.interface';
-import { IWave } from '../../../domain/models/wave-entity.interface';
-import { WaveType } from '../../../domain/models/wave-type.enum';
+import { ICandle } from '../../../../shared/models/candle-entity.interface';
+import { IWave } from '../../../../shared/models/wave-entity.interface';
+import { WaveType } from '../../../../shared/models/wave-type.enum';
 import * as firabase from 'firebase-admin';
 import { FirestoreCandle } from './firestore-candle.entity';
 
@@ -15,17 +15,14 @@ export class FirestoreWave implements IWave {
   updatedAt: Date;
   interval: string;
   symbol: string;
+  shadow: number | null = null;
+  corpse: number | null = null;
 
   constructor(init?: Partial<FirestoreWave>) {
     Object.assign(this, init);
   }
 
-  initialize(
-    type: WaveType,
-    symbol: string,
-    interval: string,
-    candle?: ICandle,
-  ): void {
+  initialize(type: WaveType, symbol: string, interval: string, candle?: ICandle): void {
     //format date as yyyymmddhhmmss
     this.id = Date.now().toString() + uuidv4();
     this.type = type;
@@ -44,12 +41,7 @@ export class FirestoreWave implements IWave {
     }
 
     if (this.isCandlePresent(newCandle)) {
-      this.candles = this.candles.map((candle) =>
-        candle.openTime.getTime() === newCandle.openTime.getTime() &&
-        this.shouldUpdateCandle(candle, newCandle)
-          ? newCandle
-          : candle,
-      );
+      this.candles = this.candles.map(candle => (candle.openTime.getTime() === newCandle.openTime.getTime() && this.shouldUpdateCandle(candle, newCandle) ? newCandle : candle));
       return false;
     } else {
       this.candles.push(newCandle);
@@ -59,31 +51,26 @@ export class FirestoreWave implements IWave {
 
       // Update startDateTime and endDateTime of the wave
       this.startDateTime = this.candles[0]?.openTime || null;
-      this.endDateTime =
-        this.candles[this.candles.length - 1]?.closeTime || null;
+      this.endDateTime = this.candles[this.candles.length - 1]?.closeTime || null;
       this.updatedAt = firabase.firestore.Timestamp.now().toDate();
+      if (this.type === WaveType.Downtrend) {
+        this.shadow = this.shadow !== null ? Math.min(this.shadow, newCandle.low) : newCandle.low;
+        this.corpse = this.corpse !== null ? Math.min(this.corpse, newCandle.close) : newCandle.close;
+      } else if (this.type === WaveType.Uptrend) {
+        this.shadow = this.shadow !== null ? Math.max(this.shadow, newCandle.high) : newCandle.high;
+        this.corpse = this.corpse !== null ? Math.max(this.corpse, newCandle.close) : newCandle.close;
+      }
 
       return true;
     }
   }
 
   private isCandlePresent(candle: ICandle): boolean {
-    return this.candles.some(
-      (existingCandle) =>
-        existingCandle.openTime.getTime() === candle.openTime.getTime(),
-    );
+    return this.candles.some(existingCandle => existingCandle.openTime.getTime() === candle.openTime.getTime());
   }
 
-  private shouldUpdateCandle(
-    existingCandle: ICandle,
-    newCandle: ICandle,
-  ): boolean {
-    return (
-      existingCandle.open !== newCandle.open ||
-      existingCandle.high !== newCandle.high ||
-      existingCandle.low !== newCandle.low ||
-      existingCandle.close !== newCandle.close
-    );
+  private shouldUpdateCandle(existingCandle: ICandle, newCandle: ICandle): boolean {
+    return existingCandle.open !== newCandle.open || existingCandle.high !== newCandle.high || existingCandle.low !== newCandle.low || existingCandle.close !== newCandle.close;
   }
 
   setType(type: WaveType): void {
@@ -121,17 +108,21 @@ export class FirestoreWave implements IWave {
     return this.candles[this.candles.length - 1];
   }
 
+  getShadow(): number | null {
+    return this.shadow;
+  }
+
+  getCorpse(): number | null {
+    return this.corpse;
+  }
+
   toFirestoreDocument(): Record<string, unknown> {
     const { id, candles, ...data } = this;
-    const plainCandles = candles.map((candle: FirestoreCandle) =>
-      candle.toFirestoreDocument(),
-    );
+    const plainCandles = candles.map((candle: FirestoreCandle) => candle.toFirestoreDocument());
     return { ...data, candles: plainCandles };
   }
 
-  static fromFirestoreDocument(
-    doc: firabase.firestore.DocumentSnapshot<firabase.firestore.DocumentData>,
-  ): FirestoreWave {
+  static fromFirestoreDocument(doc: firabase.firestore.DocumentSnapshot<firabase.firestore.DocumentData>): FirestoreWave {
     const data = doc.data();
     return new FirestoreWave({
       id: doc.id,

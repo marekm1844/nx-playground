@@ -1,12 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
 import { IRule } from '../rules/rule.interface';
-import { WaveType } from '../models/wave-type.enum';
+import { WaveType } from '../../../shared/models/wave-type.enum';
 import { BaseRule } from '../rules/base-rule';
 import { IWaveRepository } from '../repositories/wave-repository.interface';
 import { IWaveFactory } from '../factories/wave.factory';
-import { IWave } from '../models/wave-entity.interface';
-import { ICandle } from '../models/candle-entity.interface';
+import { IWave } from '../../../shared/models/wave-entity.interface';
+import { ICandle } from '../../../shared/models/candle-entity.interface';
 import { WaveUptrendEvent } from '../events/wave-uptrend.event';
 import { WaveEventDTO } from '../../dto/wave-event.dto';
 import { WaveDowntrendEvent } from '../events/wave-downtrend.event';
@@ -16,6 +16,7 @@ import { ITrendPublisherStrategy } from '../../../shared/events/domain/trend-str
 import { WaveUptrendEventStrategy } from '../../../shared/events/domain/waveuptrend-strategy.publisher';
 import { WaveDowntrendEventStrategy } from '../../../shared/events/domain/wavedowntrend-stratefy.publisher';
 import { WebSocketNotFoundError } from '../../infrastructure/websocket/websocket-notfound.error';
+import { getTaskKey } from '../../../shared/events/domain/getTaskKey.utils';
 
 @Injectable()
 export class WaveAnalyzer {
@@ -48,7 +49,7 @@ export class WaveAnalyzer {
   }
 
   async analyze(symbol: string, interval: string): Promise<void> {
-    const key = this.getTaskKey(symbol, interval);
+    const key = getTaskKey(symbol, interval);
     if (this.waveTasks.has(key)) {
       Logger.log(`Wave analysis for ${key} is already running`);
       return;
@@ -64,7 +65,7 @@ export class WaveAnalyzer {
   async analyzeSymbolInterval(symbol: string, interval: string): Promise<void> {
     let currentWave: IWave | null = null;
 
-    const key = this.getTaskKey(symbol, interval);
+    const key = getTaskKey(symbol, interval);
     if (!this.waves.has(key)) {
       this.waves.set(key, []);
     }
@@ -100,50 +101,55 @@ export class WaveAnalyzer {
             return;
           }
 
-          if (rule.getRuleType() === WaveType.Unknown) {
-            Logger.log(`${rule.constructor.name}  detected in unknown wave`);
-            currentWave.addCandle(candle);
-            isUptrend = currentWave.getType() === WaveType.Uptrend;
-            return;
-          } else if (rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Uptrend) {
-            Logger.log(`${rule.constructor.name}  detected in uptrend wave`);
-            currentWave.addCandle(candle);
-            isUptrend = true;
+          let newWaveType: WaveType;
 
-            return;
-          } else if (rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Downtrend) {
-            Logger.log(`Start ${rule.constructor.name}  detected in downtrend wave`);
-            currentWave.addCandle(candle);
-            isUptrend = false;
+          switch (rule.getRuleType()) {
+            case WaveType.Unknown:
+              Logger.log(`${rule.constructor.name} detected in unknown wave`);
+              currentWave.addCandle(candle);
+              isUptrend = currentWave.getType() === WaveType.Uptrend;
+              break;
 
-            return;
-          } else if (rule.getRuleType() === WaveType.Uptrend && currentWave.getType() === WaveType.Downtrend) {
-            Logger.log(`Start ${rule.constructor.name}  wave`);
-            currentWave.addCandle(candle);
+            case WaveType.Uptrend:
+              if (currentWave.getType() === WaveType.Uptrend) {
+                Logger.log(`${rule.constructor.name} detected in uptrend wave`);
+                currentWave.addCandle(candle);
+                isUptrend = true;
+              } else {
+                Logger.log(`Start ${rule.constructor.name} wave`);
+                currentWave.addCandle(candle);
+                await this.waveRepository.save(currentWave);
 
-            //save current wave
-            await this.waveRepository.save(currentWave);
+                currentWave = this.waveFactory.createWave(WaveType.Uptrend, symbol, interval, candle);
+                wavesForCurrentPair.push(currentWave);
+              }
+              break;
 
-            currentWave = this.waveFactory.createWave(WaveType.Uptrend, symbol, interval, candle);
-            wavesForCurrentPair.push(currentWave);
-            return;
-          } else if (rule.getRuleType() === WaveType.Downtrend && currentWave.getType() === WaveType.Uptrend) {
-            Logger.log(`Start ${rule.constructor.name}  wave`);
-            currentWave.addCandle(candle);
-            await this.waveRepository.save(currentWave);
+            case WaveType.Downtrend:
+              if (currentWave.getType() === WaveType.Downtrend) {
+                Logger.log(`Start ${rule.constructor.name} detected in downtrend wave`);
+                currentWave.addCandle(candle);
+                isUptrend = false;
+              } else {
+                Logger.log(`Start ${rule.constructor.name} wave`);
+                currentWave.addCandle(candle);
+                await this.waveRepository.save(currentWave);
 
-            currentWave = this.waveFactory.createWave(WaveType.Downtrend, symbol, interval, candle);
-            wavesForCurrentPair.push(currentWave);
-            return;
-          } else {
-            await this.waveRepository.save(currentWave);
+                currentWave = this.waveFactory.createWave(WaveType.Downtrend, symbol, interval, candle);
+                wavesForCurrentPair.push(currentWave);
+              }
+              break;
 
-            // If wave type has changed, create a new wave
-            const newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
+            default:
+              await this.waveRepository.save(currentWave);
 
-            currentWave = this.waveFactory.createWave(newWaveType, symbol, interval, candle);
-            wavesForCurrentPair.push(currentWave);
-            console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
+              // If wave type has changed, create a new wave
+              newWaveType = isUptrend ? WaveType.Uptrend : WaveType.Downtrend;
+
+              currentWave = this.waveFactory.createWave(newWaveType, symbol, interval, candle);
+              wavesForCurrentPair.push(currentWave);
+              console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
+              break;
           }
         }
       });
@@ -171,7 +177,7 @@ export class WaveAnalyzer {
   }
 
   private logWaveDetails(symbol: string, interval: string): void {
-    const key = this.getTaskKey(symbol, interval);
+    const key = getTaskKey(symbol, interval);
     const wavesForCurrentPair = this.waves.get(key);
 
     Logger.log(`Number of waves: ${wavesForCurrentPair.length} for int. ${interval}`);
@@ -192,7 +198,7 @@ export class WaveAnalyzer {
   }
 
   private async publishWaveEvent(symbol: string, interval: string) {
-    const key = this.getTaskKey(symbol, interval);
+    const key = getTaskKey(symbol, interval);
     const wavesForCurrentPair = this.waves.get(key);
 
     if (wavesForCurrentPair.slice(-1)[0].getCandles().length === 2) {
@@ -202,9 +208,5 @@ export class WaveAnalyzer {
         ? await this.uptrendStrategy.publishEvent(new WaveUptrendEvent(dto))
         : await this.downtrendStrategy.publishEvent(new WaveDowntrendEvent(dto));
     }
-  }
-
-  private getTaskKey(symbol: string, interval: string): string {
-    return `${symbol}-${interval}`;
   }
 }

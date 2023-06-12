@@ -1,20 +1,20 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
-import { ICandle } from "../../../domain/models/candle-entity.interface";
-import { ICandleRepository } from "../../../domain/repositories/candle-repository.interface";
-import { FirestoreCandle } from "../entities/firestore-candle.entity";
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ICandle } from '../../../../shared/models/candle-entity.interface';
+import { ICandleRepository } from '../../../domain/repositories/candle-repository.interface';
+import { FirestoreCandle } from '../entities/firestore-candle.entity';
 import * as firebaseAdmin from 'firebase-admin';
-import { FirestoreClient } from "../firestore.client";
+import { FirestoreClient } from '../firestore.client';
 
 @Injectable()
 export class FirestoreCandleRepository implements ICandleRepository {
   private readonly collection = this.firestoreClient.firestore.collection('candles');
 
-  constructor(private firestoreClient: FirestoreClient ) {}
+  constructor(private firestoreClient: FirestoreClient) {}
 
   async save(candle: ICandle): Promise<ICandle> {
     const firestoreCandle = candle as FirestoreCandle;
     const documentData = firestoreCandle.toFirestoreDocument();
-    const documentRef =  await this.collection.add(documentData);
+    const documentRef = await this.collection.add(documentData);
     const savedCandleDocument = await documentRef.get();
     return FirestoreCandle.fromFirestoreDocument(savedCandleDocument);
   }

@@ -1,4 +1,4 @@
-import { ICandle } from '../domain/models/candle-entity.interface';
+import { ICandle } from '../../shared/models/candle-entity.interface';
 import { WebSocketNotFoundError } from './websocket/websocket-notfound.error';
 export const CANDLE_DATA_PROVIDER = Symbol('ICandleDataProvider');
 

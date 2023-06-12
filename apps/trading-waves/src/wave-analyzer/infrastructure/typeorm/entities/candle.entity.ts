@@ -1,15 +1,15 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { TypeOrmWave } from './typeorm-wave.entity';
-import { CandleColor, ICandle } from '../../../domain/models/candle-entity.interface';
+import { CandleColor, ICandle } from '../../../../shared/models/candle-entity.interface';
 import { Inject } from '@nestjs/common';
 import { IWaveFactory } from '../../../domain/factories/wave.factory';
 
 @Entity()
-export class TypeOrmCandle implements ICandle{
+export class TypeOrmCandle implements ICandle {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   openTime: Date;
 
   @Column({ type: 'real' })
@@ -45,11 +45,11 @@ export class TypeOrmCandle implements ICandle{
   @Column()
   ignore: number;
 
-  @Column( {type:'boolean'})
+  @Column({ type: 'boolean' })
   completed: boolean;
 
-  @ManyToOne(() => TypeOrmWave, (wave) => wave.candles, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'wave_id' }) 
+  @ManyToOne(() => TypeOrmWave, wave => wave.candles, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'wave_id' })
   wave: TypeOrmWave;
 
   @Column({ type: 'varchar', nullable: false })
@@ -61,8 +61,7 @@ export class TypeOrmCandle implements ICandle{
   @Column()
   minimumCorpse: number;
 
-  initialize(
-    data?: {
+  initialize(data?: {
     openTime: number;
     open: string;
     high: string;

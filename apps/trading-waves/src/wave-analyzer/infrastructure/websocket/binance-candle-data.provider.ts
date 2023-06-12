@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ICandleDataProvider } from '../icandle-data-provider.interface';
 import {} from '../typeorm/entities/candle.entity';
 import { ICandleFactory } from '../../domain/factories/candle.factory';
-import { ICandle } from '../../domain/models/candle-entity.interface';
+import { ICandle } from '../../../shared/models/candle-entity.interface';
 import { IWebSocketConnectionPool } from '../../../shared/events/infarstructure/websocket-connection-pool.interface';
 import { WebSocketNotFoundError } from './websocket-notfound.error';
 

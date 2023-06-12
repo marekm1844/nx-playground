@@ -1,4 +1,4 @@
-import { ICandle } from "../models/candle-entity.interface";
+import { ICandle } from '../../../shared/models/candle-entity.interface';
 
 export interface ICandleRepository {
   save(candle: ICandle): Promise<ICandle>;
