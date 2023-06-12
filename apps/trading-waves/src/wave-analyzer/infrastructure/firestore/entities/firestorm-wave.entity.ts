@@ -36,37 +36,46 @@ export class FirestoreWave implements IWave {
   }
 
   addCandle(newCandle: ICandle): boolean {
-    if (!this.candles) {
-      this.candles = [];
-    }
+    this.candles ??= [];
 
     if (this.isCandlePresent(newCandle)) {
-      this.candles = this.candles.map(candle => (candle.openTime.getTime() === newCandle.openTime.getTime() && this.shouldUpdateCandle(candle, newCandle) ? newCandle : candle));
-      return false;
+      this.updateExistingCandle(newCandle);
     } else {
-      this.candles.push(newCandle);
-
-      // Sort candles by openTime
-      this.candles.sort((a, b) => a.openTime.getTime() - b.openTime.getTime());
-
-      // Update startDateTime and endDateTime of the wave
-      this.startDateTime = this.candles[0]?.openTime || null;
-      this.endDateTime = this.candles[this.candles.length - 1]?.closeTime || null;
-      this.updatedAt = firabase.firestore.Timestamp.now().toDate();
-      if (this.type === WaveType.Downtrend) {
-        this.shadow = this.shadow !== null ? Math.min(this.shadow, newCandle.low) : newCandle.low;
-        this.corpse = this.corpse !== null ? Math.min(this.corpse, newCandle.close) : newCandle.close;
-      } else if (this.type === WaveType.Uptrend) {
-        this.shadow = this.shadow !== null ? Math.max(this.shadow, newCandle.high) : newCandle.high;
-        this.corpse = this.corpse !== null ? Math.max(this.corpse, newCandle.close) : newCandle.close;
-      }
-
-      return true;
+      this.addNewCandle(newCandle);
     }
+
+    this.updateDateTimeRange();
+    this.updateShadowAndCorpse(newCandle);
+
+    return true;
   }
 
   private isCandlePresent(candle: ICandle): boolean {
     return this.candles.some(existingCandle => existingCandle.openTime.getTime() === candle.openTime.getTime());
+  }
+
+  private updateExistingCandle(newCandle: ICandle): void {
+    this.candles = this.candles.map(candle => (candle.openTime === newCandle.openTime && this.shouldUpdateCandle(candle, newCandle) ? newCandle : candle));
+  }
+
+  private addNewCandle(newCandle: ICandle): void {
+    this.candles.push(newCandle);
+    this.candles.sort((a, b) => a.openTime.getTime() - b.openTime.getTime());
+  }
+
+  private updateDateTimeRange(): void {
+    this.startDateTime = this.candles[0]?.openTime ?? null;
+    this.endDateTime = this.candles[this.candles.length - 1]?.closeTime ?? null;
+  }
+
+  private updateShadowAndCorpse(newCandle: ICandle): void {
+    if (WaveType.Uptrend === this.type) {
+      this.shadow = this.shadow !== null ? Math.max(this.shadow, newCandle.high) : newCandle.high;
+      this.corpse = this.corpse !== null ? Math.max(this.corpse, newCandle.close) : newCandle.close;
+    } else if (WaveType.Downtrend === this.type) {
+      this.shadow = this.shadow !== null ? Math.min(this.shadow, newCandle.low) : newCandle.low;
+      this.corpse = this.corpse !== null ? Math.min(this.corpse, newCandle.close) : newCandle.close;
+    }
   }
 
   private shouldUpdateCandle(existingCandle: ICandle, newCandle: ICandle): boolean {

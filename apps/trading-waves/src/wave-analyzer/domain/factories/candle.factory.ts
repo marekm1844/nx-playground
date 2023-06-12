@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotImplementedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ICandle } from '../../../shared/models/candle-entity.interface';
 import { TypeOrmCandle } from '../../infrastructure/typeorm/entities/candle.entity';
 import { FirestoreCandle } from '../../infrastructure/firestore/entities/firestore-candle.entity';

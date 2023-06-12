@@ -1,4 +1,4 @@
-import { Inject, NotImplementedException } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { TypeOrmWave } from '../../infrastructure/typeorm/entities/typeorm-wave.entity';
 import { IWave } from '../../../shared/models/wave-entity.interface';
 import { WaveType } from '../../../shared/models/wave-type.enum';

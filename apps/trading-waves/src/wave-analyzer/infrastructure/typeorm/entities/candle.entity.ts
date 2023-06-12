@@ -1,8 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { TypeOrmWave } from './typeorm-wave.entity';
 import { CandleColor, ICandle } from '../../../../shared/models/candle-entity.interface';
-import { Inject } from '@nestjs/common';
-import { IWaveFactory } from '../../../domain/factories/wave.factory';
 
 @Entity()
 export class TypeOrmCandle implements ICandle {

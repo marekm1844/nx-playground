@@ -95,8 +95,8 @@ export class WaveAnalyzer {
       let isUptrend = false;
 
       //execute rules
-      this.rules.forEach(async rule => {
-        if (rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType())) {
+      for (const rule of this.rules) {
+        if (await rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType())) {
           if (this.checkIfCandleExistsInCache(candle, symbol, interval)) {
             return;
           }
@@ -152,7 +152,7 @@ export class WaveAnalyzer {
               break;
           }
         }
-      });
+      }
 
       await this.publishWaveEvent(symbol, interval);
 

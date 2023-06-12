@@ -1,8 +1,7 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ICandle } from '../../../../shared/models/candle-entity.interface';
 import { ICandleRepository } from '../../../domain/repositories/candle-repository.interface';
 import { FirestoreCandle } from '../entities/firestore-candle.entity';
-import * as firebaseAdmin from 'firebase-admin';
 import { FirestoreClient } from '../firestore.client';
 
 @Injectable()
