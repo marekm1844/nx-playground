@@ -19,7 +19,7 @@ content-type: application/json
 
 {
   "symbol": "BTCUSDT",
-  "interval": "30min"
+  "interval": "30m"
 }
 
 
@@ -30,7 +30,7 @@ content-type: application/json
 
 {
   "symbol": "BTCUSDT",
-  "interval": "3m"
+  "interval": "1m"
 }
 
 ### TEST:Stop  TEST
