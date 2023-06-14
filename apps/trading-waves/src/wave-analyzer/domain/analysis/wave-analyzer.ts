@@ -10,13 +10,17 @@ import { ICandle } from '../../../shared/models/candle-entity.interface';
 import { WaveUptrendEvent } from '../events/wave-uptrend.event';
 import { WaveEventDTO } from '../../dto/wave-event.dto';
 import { WaveDowntrendEvent } from '../events/wave-downtrend.event';
-import { DOWNTREND_QUEUE_SERVICE, UPTREND_QUEUE_SERVICE } from '../../../shared/events/infarstructure/redis-queue.constant';
+import { DOWNTREND_QUEUE_SERVICE, UPTREND_QUEUE_SERVICE, WAVE_COMPLETED_QUEUE_SERVICE } from '../../../shared/events/infarstructure/redis-queue.constant';
 import { IQueueService } from '../../../shared/events/queue-service.interface';
 import { ITrendPublisherStrategy } from '../../../shared/events/domain/trend-strategy.interface';
 import { WaveUptrendEventStrategy } from '../../../shared/events/domain/waveuptrend-strategy.publisher';
 import { WaveDowntrendEventStrategy } from '../../../shared/events/domain/wavedowntrend-stratefy.publisher';
 import { WebSocketNotFoundError } from '../../infrastructure/websocket/websocket-notfound.error';
 import { getTaskKey } from '../../../shared/events/domain/getTaskKey.utils';
+import { WaveCompletedEventDTO } from '../../dto/wave-completed-event.dto';
+import { WaveCompletedEventStrategy } from '../../../shared/events/domain/wavecomplete-strategy.publisher';
+import { Wave } from 'aws-cdk-lib/pipelines';
+import { WaveCompletedEvent } from '../events/wave-completed.event';
 
 @Injectable()
 export class WaveAnalyzer {
@@ -25,6 +29,7 @@ export class WaveAnalyzer {
   private ruleEvaluationCache: string[] = [];
   private uptrendStrategy: ITrendPublisherStrategy;
   private downtrendStrategy: ITrendPublisherStrategy;
+  private completedStrategy: WaveCompletedEventStrategy;
   private waveTasks: Map<string, Promise<void>> = new Map();
 
   constructor(
@@ -35,9 +40,12 @@ export class WaveAnalyzer {
     @Inject(UPTREND_QUEUE_SERVICE) private readonly uptrendQueue: IQueueService,
     @Inject(DOWNTREND_QUEUE_SERVICE)
     private readonly downtrendQueue: IQueueService,
+    @Inject(WAVE_COMPLETED_QUEUE_SERVICE)
+    private readonly waveCompletedQueue: IQueueService,
   ) {
     this.uptrendStrategy = new WaveUptrendEventStrategy(this.uptrendQueue);
     this.downtrendStrategy = new WaveDowntrendEventStrategy(this.downtrendQueue);
+    this.completedStrategy = new WaveCompletedEventStrategy(this.waveCompletedQueue);
   }
 
   addRule(rule: IRule): void {
@@ -207,6 +215,17 @@ export class WaveAnalyzer {
       lastWave.getType() === WaveType.Uptrend
         ? await this.uptrendStrategy.publishEvent(new WaveUptrendEvent(dto))
         : await this.downtrendStrategy.publishEvent(new WaveDowntrendEvent(dto));
+
+      const waceCompleet = new WaveCompletedEventDTO(
+        lastWave.getStartDateTime(),
+        lastWave.getLastCandle().close,
+        symbol,
+        interval,
+        lastWave.shadow,
+        lastWave.corpse,
+        lastWave.type,
+      );
+      await this.completedStrategy.publishEvent(new WaveCompletedEvent(waceCompleet));
     }
   }
 }
