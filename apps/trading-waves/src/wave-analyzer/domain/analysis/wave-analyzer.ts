@@ -19,7 +19,6 @@ import { WebSocketNotFoundError } from '../../infrastructure/websocket/websocket
 import { getTaskKey } from '../../../shared/events/domain/getTaskKey.utils';
 import { WaveCompletedEventDTO } from '../../dto/wave-completed-event.dto';
 import { WaveCompletedEventStrategy } from '../../../shared/events/domain/wavecomplete-strategy.publisher';
-import { Wave } from 'aws-cdk-lib/pipelines';
 import { WaveCompletedEvent } from '../events/wave-completed.event';
 
 @Injectable()
