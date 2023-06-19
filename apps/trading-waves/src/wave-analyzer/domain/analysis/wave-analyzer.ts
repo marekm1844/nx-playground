@@ -23,11 +23,10 @@ import { WaveCompletedEvent } from '../events/wave-completed.event';
 export class WaveAnalyzer {
   private waves: Map<string, IWave[]> = new Map<string, IWave[]>();
   private rules: IRule[] = [];
-  private ruleEvaluationCache: string[] = [];
+  private readonly cacheKeys: Set<string> = new Set<string>();
   private uptrendStrategy: ITrendPublisherStrategy;
   private downtrendStrategy: ITrendPublisherStrategy;
   private completedStrategy: WaveCompletedEventStrategy;
-  private waveTasks: Map<string, Promise<void>> = new Map();
 
   constructor(
     private readonly candleDataProvider: ICandleDataProvider,
@@ -164,12 +163,15 @@ export class WaveAnalyzer {
   private checkIfCandleExistsInCache(candle1: ICandle, symbol: string, interval: string): boolean {
     const cacheKey = `${candle1.openTime.getTime()}-${symbol}-${interval}`;
 
-    if (!this.ruleEvaluationCache.includes(cacheKey)) {
-      this.ruleEvaluationCache.push(cacheKey);
-      return false;
-    } else {
+    if (this.cacheKeys.has(cacheKey)) {
       return true;
     }
+    this.cacheKeys.add(cacheKey);
+    if (this.cacheKeys.size > 1000) {
+      const oldestCacheKey = this.cacheKeys.values().next().value;
+      this.cacheKeys.delete(oldestCacheKey);
+    }
+    return false;
   }
 
   private logWaveDetails(symbol: string, interval: string): void {
