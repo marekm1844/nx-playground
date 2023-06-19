@@ -1,5 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CANDLE_DATA_PROVIDER, ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
+import { Logger } from '@nestjs/common';
+import { ICandleDataProvider } from '../../infrastructure/icandle-data-provider.interface';
 import { IRule } from '../rules/rule.interface';
 import { WaveType } from '../../../shared/models/wave-type.enum';
 import { BaseRule } from '../rules/base-rule';
@@ -10,7 +10,6 @@ import { ICandle } from '../../../shared/models/candle-entity.interface';
 import { WaveUptrendEvent } from '../events/wave-uptrend.event';
 import { WaveEventDTO } from '../../dto/wave-event.dto';
 import { WaveDowntrendEvent } from '../events/wave-downtrend.event';
-import { DOWNTREND_QUEUE_SERVICE, UPTREND_QUEUE_SERVICE, WAVE_COMPLETED_QUEUE_SERVICE } from '../../../shared/events/infarstructure/redis-queue.constant';
 import { IQueueService } from '../../../shared/events/queue-service.interface';
 import { ITrendPublisherStrategy } from '../../../shared/events/domain/trend-strategy.interface';
 import { WaveUptrendEventStrategy } from '../../../shared/events/domain/waveuptrend-strategy.publisher';
@@ -21,7 +20,6 @@ import { WaveCompletedEventDTO } from '../../dto/wave-completed-event.dto';
 import { WaveCompletedEventStrategy } from '../../../shared/events/domain/wavecomplete-strategy.publisher';
 import { WaveCompletedEvent } from '../events/wave-completed.event';
 
-@Injectable()
 export class WaveAnalyzer {
   private waves: Map<string, IWave[]> = new Map<string, IWave[]>();
   private rules: IRule[] = [];
@@ -32,14 +30,11 @@ export class WaveAnalyzer {
   private waveTasks: Map<string, Promise<void>> = new Map();
 
   constructor(
-    @Inject(CANDLE_DATA_PROVIDER)
     private readonly candleDataProvider: ICandleDataProvider,
-    @Inject('IWaveRepository') private readonly waveRepository: IWaveRepository,
+    private readonly waveRepository: IWaveRepository,
     private readonly waveFactory: IWaveFactory,
-    @Inject(UPTREND_QUEUE_SERVICE) private readonly uptrendQueue: IQueueService,
-    @Inject(DOWNTREND_QUEUE_SERVICE)
+    private readonly uptrendQueue: IQueueService,
     private readonly downtrendQueue: IQueueService,
-    @Inject(WAVE_COMPLETED_QUEUE_SERVICE)
     private readonly waveCompletedQueue: IQueueService,
   ) {
     this.uptrendStrategy = new WaveUptrendEventStrategy(this.uptrendQueue);
@@ -56,16 +51,9 @@ export class WaveAnalyzer {
   }
 
   async analyze(symbol: string, interval: string): Promise<void> {
-    const key = getTaskKey(symbol, interval);
-    if (this.waveTasks.has(key)) {
-      Logger.log(`Wave analysis for ${key} is already running`);
-      return;
-    }
     const task = this.analyzeSymbolInterval(symbol, interval);
-    this.waveTasks.set(key, task);
     task.finally(() => {
       this.candleDataProvider.close(symbol, interval);
-      this.waveTasks.delete(key);
     });
   }
 
@@ -102,6 +90,7 @@ export class WaveAnalyzer {
       let isUptrend = false;
 
       //execute rules
+
       this.rules.forEach(async rule => {
         if (rule.evaluate([lastCandleInCurrentWave, candle], currentWave.getType())) {
           if (this.checkIfCandleExistsInCache(candle, symbol, interval)) {

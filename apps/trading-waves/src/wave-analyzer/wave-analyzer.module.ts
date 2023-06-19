@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { WaveAnalyzer } from './domain/analysis/wave-analyzer';
 import { BinanceCandleDataProvider } from './infrastructure/websocket/binance-candle-data.provider';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmCandle } from './infrastructure/typeorm/entities/candle.entity';
@@ -18,6 +17,8 @@ import { FirestoreWave } from './infrastructure/firestore/entities/firestorm-wav
 import { FirestoreModule } from './infrastructure/firestore/firestore.module';
 import { BullmqModule } from './infrastructure/bullmq/bullmq.module';
 import { BinanceConnectionPool } from './infrastructure/websocket/binance-connectionpool';
+import { WaveAnalyzerFactory } from './domain/analysis/wave-analyzer.factory';
+import { IWebSocketConnectionPool } from '../shared/events/infarstructure/websocket-connection-pool.interface';
 
 @Module({
   imports: [
@@ -44,10 +45,9 @@ import { BinanceConnectionPool } from './infrastructure/websocket/binance-connec
   ],
   providers: [
     FirestoreModule,
-    WaveAnalyzer,
+    WaveAnalyzerFactory,
     BinanceCandleDataProvider,
     BinanceConnectionPool,
-    { provide: CANDLE_DATA_PROVIDER, useClass: BinanceCandleDataProvider },
     {
       provide: 'ICandle',
       useClass: FirestoreCandle,
@@ -78,7 +78,15 @@ import { BinanceConnectionPool } from './infrastructure/websocket/binance-connec
       provide: 'IWebSocketConnectionPool',
       useClass: BinanceConnectionPool,
     },
+    {
+      provide: CANDLE_DATA_PROVIDER,
+      useFactory: (candleFactory: ICandleFactory, connectionPool: IWebSocketConnectionPool) => {
+        return () => new BinanceCandleDataProvider(candleFactory, connectionPool);
+      },
+      inject: [ICandleFactory, BinanceConnectionPool],
+    },
   ],
   controllers: [WaveAnalyzerController],
+  exports: [CANDLE_DATA_PROVIDER],
 })
 export class WaveAnalyzerModule {}
