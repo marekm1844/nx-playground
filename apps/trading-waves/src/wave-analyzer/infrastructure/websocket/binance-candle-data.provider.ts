@@ -15,6 +15,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
 
   constructor(private readonly candleFactory: ICandleFactory, @Inject('IWebSocketConnectionPool') private readonly connectionPool: IWebSocketConnectionPool) {
     this.wasCloseIntentional = false;
+    Logger.debug(`[constructor] wasCloseIntentional set to: ${this.wasCloseIntentional}`);
   }
 
   async *candles(symbol: string, interval: string): AsyncIterableIterator<ICandle | WebSocketNotFoundError> {
@@ -104,15 +105,16 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     });
 
     ws.on('error', error => {
-      console.error('WebSocket error:', error);
+      Logger.error('WebSocket error:', error);
       this.reconnect(symbol, interval).catch(err => {
         Logger.error(err);
       });
     });
 
     ws.on('close', () => {
-      console.log('WebSocket closed.');
+      Logger.debug(`WebSocket closed. ${symbol}@${interval} was closed intentionally: ${this.wasCloseIntentional}`);
       if (!this.wasCloseIntentional) {
+        Logger.debug('[close] entering reconnect');
         this.reconnect(symbol, interval).catch(err => {
           Logger.error(err);
         });
@@ -121,9 +123,10 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
   }
 
   private async reconnect(symbol: string, interval: string): Promise<void> {
-    console.log('Reconnecting WebSocket...');
+    Logger.log('Reconnecting WebSocket...');
     this.wasCloseIntentional = false;
-    this.close(symbol, interval);
+    Logger.debug(`[reconnect] wasCloseIntentional set to: ${this.wasCloseIntentional}; ${symbol}@${interval}`);
+    this.close(symbol, interval, false);
 
     await new Promise(resolve => setTimeout(resolve, 5000));
 
@@ -136,13 +139,14 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     }
   }
 
-  close(symbol: string, interval: string): void {
+  close(symbol: string, interval: string, manualClose: boolean): void {
     const wsOrError = this.connectionPool.get(symbol, interval);
     if (wsOrError instanceof Error) {
       Logger.error(`No active WebSocket connection found for symbol: ${symbol} and interval: ${interval}`);
       return;
     }
-    this.wasCloseIntentional = true;
+    this.wasCloseIntentional = manualClose;
+    Logger.debug(`[close] wasCloseIntentional set to: ${this.wasCloseIntentional}, ${symbol}@${interval} `);
     this.connectionPool.disconnect(symbol, interval);
   }
 }

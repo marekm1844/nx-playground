@@ -52,7 +52,7 @@ export class WaveAnalyzer {
   async analyze(symbol: string, interval: string): Promise<void> {
     const task = this.analyzeSymbolInterval(symbol, interval);
     task.finally(() => {
-      this.candleDataProvider.close(symbol, interval);
+      this.candleDataProvider.close(symbol, interval, true);
     });
   }
 
@@ -149,15 +149,15 @@ export class WaveAnalyzer {
         }
       });
 
-      await this.publishWaveEvent(symbol, interval);
-
       //log number of waves and from last wave with number of candels in each wave and start date and type and log candle data as json
       this.logWaveDetails(symbol, interval);
+
+      await this.publishWaveEvent(symbol, interval);
     }
   }
 
   stop(symbol: string, interval: string): void {
-    this.candleDataProvider.close(symbol, interval);
+    this.candleDataProvider.close(symbol, interval, true);
   }
 
   private checkIfCandleExistsInCache(candle1: ICandle, symbol: string, interval: string): boolean {
@@ -206,7 +206,7 @@ export class WaveAnalyzer {
         ? await this.uptrendStrategy.publishEvent(new WaveUptrendEvent(dto))
         : await this.downtrendStrategy.publishEvent(new WaveDowntrendEvent(dto));
 
-      const waceCompleet = new WaveCompletedEventDTO(
+      const waveCompleet = new WaveCompletedEventDTO(
         lastWave.getStartDateTime(),
         lastWave.getLastCandle().close,
         symbol,
@@ -215,7 +215,7 @@ export class WaveAnalyzer {
         lastWave.corpse,
         lastWave.type,
       );
-      await this.completedStrategy.publishEvent(new WaveCompletedEvent(waceCompleet));
+      await this.completedStrategy.publishEvent(new WaveCompletedEvent(waveCompleet));
     }
   }
 }
