@@ -10,7 +10,7 @@ content-type: application/json
 
 {
   "symbol": "BTCUSDT",
-  "interval": "30m"
+  "interval": "1h"
 }
 
 ###PROD: Stop process and configure it  PROD
@@ -30,7 +30,7 @@ content-type: application/json
 
 {
   "symbol": "BTCUSDT",
-  "interval": "1m"
+  "interval": "3m"
 }
 
 ### TEST:Stop  TEST
