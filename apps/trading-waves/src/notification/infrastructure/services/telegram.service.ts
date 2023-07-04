@@ -12,6 +12,10 @@ export class TelegramService implements INotificationService, OnModuleDestroy {
     await this.bot.sendMessage(notification.chatId, message);
   }
 
+  async sendRawNotification(chatId: number, message: string): Promise<void> {
+    await this.bot.sendMessage(chatId, message);
+  }
+
   onModuleDestroy() {
     this.bot.stopPolling();
   }
@@ -23,7 +27,8 @@ export class TelegramService implements INotificationService, OnModuleDestroy {
       `Symbol: ${notification.symbol}\n` +
       `Price: ${notification.price}\n` +
       `Interval: ${notification.interval}\n` +
-      `Created At: ${notification.createdAt}`;
+      `Created At: ${notification.createdAt}\n` +
+      `Module: ${notification.source}`;
 
     return message;
   }

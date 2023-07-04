@@ -8,7 +8,7 @@ import { Logger } from '@nestjs/common';
 export class DogFormationStrategy implements IFormationStrategy {
   private waves: Map<string, WaveCompletedEventDTO[]> = new Map();
 
-  isFormationDetected(wave: WaveCompletedEventDTO): boolean {
+  isFormationDetected(wave: WaveCompletedEventDTO): Promise<boolean> {
     const key = this.getTaskKey(wave.symbol, wave.interval);
     if (!this.waves.has(key)) {
       this.waves.set(key, []);
@@ -17,7 +17,7 @@ export class DogFormationStrategy implements IFormationStrategy {
     this.ensureUptrendWaveIsFirst(key);
     this.ensureMaxFourWaves(key);
 
-    return this.isDogFormation(wave.symbol, wave.interval);
+    return Promise.resolve(this.isDogFormation(wave.symbol, wave.interval));
   }
 
   private getTaskKey(symbol: string, interval: string): string {
@@ -31,7 +31,7 @@ export class DogFormationStrategy implements IFormationStrategy {
   }
 
   private ensureMaxFourWaves(key: string): void {
-    while (this.waves.get(key).length > 4) {
+    while (this.waves.get(key).length > 5) {
       this.waves.get(key).shift();
     }
   }
@@ -40,17 +40,18 @@ export class DogFormationStrategy implements IFormationStrategy {
     const key = this.getTaskKey(symbol, interval);
     const wavesForCurrentPair = this.waves.get(key);
 
-    if (wavesForCurrentPair.length < 4) {
+    if (wavesForCurrentPair.length < 5) {
       return false;
     }
 
-    const [wave1, wave2, wave3, wave4] = wavesForCurrentPair.slice(-4);
+    const [wave1, wave2, wave3, wave4, wave5] = wavesForCurrentPair.slice(-5);
 
     if (
       wave1.type === WaveType.Uptrend &&
       wave2.type === WaveType.Downtrend &&
       wave3.type === WaveType.Uptrend &&
       wave4.type === WaveType.Downtrend &&
+      wave5.type === WaveType.Uptrend &&
       (wave4.corpse >= wave2.corpse || wave4.shadow >= wave2.shadow)
     ) {
       Logger.log('Dog Formation Detected');
@@ -63,5 +64,9 @@ export class DogFormationStrategy implements IFormationStrategy {
     }
 
     return false;
+  }
+
+  getFormationName(): string {
+    return 'Dog Formation';
   }
 }

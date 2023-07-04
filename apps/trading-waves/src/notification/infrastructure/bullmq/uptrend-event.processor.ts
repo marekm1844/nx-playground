@@ -29,6 +29,6 @@ export class UptrendEventProcessor extends WorkerHost {
     };
 
     await this.notificationService.sendNotification(notification);
-    Logger.log(`Notification sent for Uptrend ${notification.symbol} at ${notification.createdAt}`);
+    Logger.log(`Notification sent for Uptrend ${notification.symbol}@${notification.interval}  at ${notification.createdAt}`);
   }
 }
