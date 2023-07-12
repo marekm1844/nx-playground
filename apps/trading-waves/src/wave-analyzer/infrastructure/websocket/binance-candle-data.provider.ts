@@ -112,6 +112,9 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     });
 
     ws.on('close', () => {
+      // remove ping on connection close
+      // this.removeHeartbeat(symbol, interval);
+
       Logger.debug(`WebSocket closed. ${symbol}@${interval} was closed intentionally: ${this.wasCloseIntentional}`);
       if (!this.wasCloseIntentional) {
         Logger.debug('[close] entering reconnect');
@@ -147,6 +150,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     }
     this.wasCloseIntentional = manualClose;
     Logger.debug(`[close] wasCloseIntentional set to: ${this.wasCloseIntentional}, ${symbol}@${interval} `);
+    //this.removeHeartbeat(symbol, interval);
     this.connectionPool.disconnect(symbol, interval);
   }
 }
