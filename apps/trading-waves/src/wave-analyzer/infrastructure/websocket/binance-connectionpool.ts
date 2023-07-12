@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IWebSocketConnectionPool } from '../../../shared/events/infarstructure/websocket-connection-pool.interface';
-import { WebSocket } from 'ws';
+import WebSocket from 'ws';
 import { WebSocketNotFoundError } from './websocket-notfound.error';
 @Injectable()
 export class BinanceConnectionPool implements IWebSocketConnectionPool {
