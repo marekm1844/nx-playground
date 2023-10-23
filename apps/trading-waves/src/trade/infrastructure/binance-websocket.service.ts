@@ -1,36 +1,31 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import Binance from 'binance-api-node';
-import { IEventStore } from '../domain/repositories/event-store.interface';
-import { EventPublisher } from '@nestjs/cqrs';
-import { OrderEventDto } from '../domain/dto/order-event.dto';
+import { CommandBus } from '@nestjs/cqrs';
+import { IOrderProps } from '../domain/models/order.interface';
+import { mapBinanceResponseToOrderProps } from './binance.utils';
+import { UpdateOrderCommand } from '../app/commands/update-order.command';
 
 @Injectable()
 export class BinanceWebsocketService {
   private readonly binanceWsClient;
 
-  constructor(@Inject('BINANCE_API_KEY') apiKey: string, @Inject('BINANCE_SECRET_KEY') secretKey: string, private eventStore: IEventStore, private publisher: EventPublisher) {
+  constructor(@Inject('BINANCE_API_KEY') apiKey: string, @Inject('BINANCE_SECRET_KEY') secretKey: string, private commandBus: CommandBus) {
     this.binanceWsClient = Binance({
       apiKey: apiKey,
       apiSecret: secretKey,
     }).ws;
   }
 
-  // listedForOrderUpates(orderId: string) {
-  //   const stream =
-  //   this.binanceWsClient.userData( (event) => {
-  //       if (event.eventType === 'executionReport' && event.orderId === orderId) {
-  //           this.publisher.mergeObjectContext(
-  //             new OrderEventDto(orderId, event.orderStatus)
-  //           );
-  //         }
-  //       },
-  //       // Handle errors here
-  //     );
-  //       const orderUpdatedEvent = this.publisher.mergeObjectContext(new OrderEventDto(this.mapBinanceResponseToOrderEventDto(msg)));
-
-  //       this.eventStore.save(orderUpdatedEvent);
-  //       orderUpdatedEvent.commit();
-  //     }
-  //   });
-  // }
+  listenForOrderUpates(orderId: string) {
+    this.binanceWsClient.userData(
+      event => {
+        if (event.eventType === 'executionReport' && event.orderId === orderId) {
+          Logger.debug(`[BinanceWebsocketService] Order update received: [${JSON.stringify(event, null, 2)}]`);
+          const orderDetails: IOrderProps = mapBinanceResponseToOrderProps(event);
+          this.commandBus.execute(new UpdateOrderCommand(orderDetails));
+        }
+      },
+      // Handle errors here
+    );
+  }
 }

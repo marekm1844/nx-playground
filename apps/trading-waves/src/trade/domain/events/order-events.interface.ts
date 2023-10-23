@@ -1,3 +1,4 @@
+import { IEvent } from '@nestjs/cqrs';
 import { IOrderProps } from '../models/order.interface';
 
 export enum OrderEventType {
@@ -7,12 +8,22 @@ export enum OrderEventType {
   PARTIALLY_FILLED = 'OrderPartiallyFilled',
   UPDATED = 'OrderUpdated',
 }
+export interface IOrderEventMetadata {
+  eventId: string;
+  aggregateId: string;
+  sequenceNumber: number;
+  createdAt: Date;
+  version: number;
+  correlationId?: string;
+  causationId?: string;
+}
 
 export interface IOrderEvent {
-  id: string;
-  sequenceNumber?: number;
-  orderId: string;
-  eventType: string;
-  eventData: Partial<IOrderProps>;
-  createdAt: Date;
+  eventType: OrderEventType;
+  payload: Partial<IOrderProps>;
+}
+export interface ISavedOrderEvent extends IOrderEventMetadata, IOrderEvent {}
+
+export function isOrderEvent(event: IEvent): event is IOrderEvent {
+  return (event as IOrderEvent).payload.id !== undefined;
 }

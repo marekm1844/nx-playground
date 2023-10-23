@@ -41,6 +41,7 @@ export enum TimeInForce {
 
 export interface IOrderProps {
   id: string;
+  clientOrderId: string;
   symbol: string;
   orderSide: OrderSide;
   orderType: OrderType;
@@ -53,4 +54,5 @@ export interface IOrderProps {
   timeInForce: TimeInForce;
   stopPrice?: number;
   icebergQuantity?: number;
+  cummulativeQuoteQuantity?: number;
 }

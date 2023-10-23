@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { FirestoreClient } from '../../../wave-analyzer/infrastructure/firestore/firestore.client';
+import { Injectable, Logger } from '@nestjs/common';
+import { FirestoreClient } from '../../../shared/repository/firestore.client';
 import { IEventStore } from '../../domain/repositories/event-store.interface';
-import { IOrderEvent } from '../../domain/events/order-events.interface';
+import { IOrderEvent, ISavedOrderEvent, isOrderEvent } from '../../domain/events/order-events.interface';
+import { Order } from '../../domain/order.aggregate';
+import { OrderInvalidEventTypeError } from '../../domain/errors/order.errors';
+import * as uuid from 'uuid';
+import { log } from 'console';
 
 @Injectable()
 export class FirestoreEventStore implements IEventStore {
@@ -13,20 +17,42 @@ export class FirestoreEventStore implements IEventStore {
     this.collection = this.firestoreClient.firestore.collection(collectionName);
   }
 
-  async save(event: IOrderEvent): Promise<IOrderEvent> {
-    // Retrieve the current max sequence number for this order
-    const maxSeqNumberSnapshot = await this.collection.where('orderId', '==', event.orderId).orderBy('sequenceNumber', 'desc').limit(1).get();
+  async save(order: Order): Promise<void> {
+    Logger.debug(`Saving events for order ${order.props.id}`);
+    for (const event of order.getUncommittedEvents()) {
+      if (!isOrderEvent(event)) {
+        throw new OrderInvalidEventTypeError();
+      }
+      // Retrieve the current max sequence number for this order
+      const maxSeqNumberSnapshot = await this.collection.where('orderId', '==', order.props.id).orderBy('sequenceNumber', 'desc').limit(1).get();
 
-    let sequenceNumber = 1;
-    if (!maxSeqNumberSnapshot.empty) {
-      sequenceNumber = maxSeqNumberSnapshot.docs[0].data().sequenceNumber + 1;
+      let sequenceNumber = 1;
+      if (!maxSeqNumberSnapshot.empty) {
+        sequenceNumber = maxSeqNumberSnapshot.docs[0].data().sequenceNumber + 1;
+      }
+
+      const storedOrder: ISavedOrderEvent = {
+        payload: event.payload,
+        eventId: uuid.v4(),
+        eventType: event.eventType,
+        sequenceNumber: sequenceNumber,
+        version: 1,
+        createdAt: new Date(),
+        aggregateId: order.props.id,
+      };
+
+      try {
+        Logger.debug(`Saving event ${JSON.stringify(storedOrder)}`);
+        await this.collection.add(storedOrder);
+      } catch (error) {
+        //TODO: retry after a while
+        Logger.error(error);
+      }
+
+      //const savedEventDocument = await documentRef.get();
     }
-
-    const eventWithSeqNumber = { ...event, sequenceNumber };
-
-    const documentRef = await this.collection.add(eventWithSeqNumber);
-    const savedEventDocument = await documentRef.get();
-    return savedEventDocument.data() as IOrderEvent;
+    //Logger.debug(`Committing events for order ${order.props.id}`);
+    //order.commit();
   }
 
   async getEventsForOrder(orderId: string): Promise<IOrderEvent[]> {

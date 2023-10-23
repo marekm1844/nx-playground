@@ -1,46 +1,51 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import Binance from 'binance-api-node';
-import { IEventStore } from '../domain/repositories/event-store.interface';
-import { OrderCreatedEvent } from '../domain/events/order-created.event';
-import { IOrderEvent } from '../domain/events/order-events.interface';
-import { OrderSide, OrderStatus, OrderType, TimeInForce } from '../domain/models/order.interface';
-import { OrderEventDto } from '../domain/dto/order-event.dto';
+import { IOrderProps, OrderSide, OrderStatus, OrderType, TimeInForce } from '../domain/models/order.interface';
 import { CreateOrderDto } from '../domain/dto/create-order.dto';
 import { CancelOrderDto } from '../domain/dto/cancel-order.dto';
+import { OrderCreationFailedError } from '../domain/errors/trade.errors';
 
 @Injectable()
 export class BinanceApiService {
   private readonly binanceClient;
 
-  constructor(@Inject('BINANCE_API_KEY') apiKey: string, @Inject('BINANCE_SECRET_KEY') secretKey: string, private eventStore: IEventStore) {
+  constructor(@Inject('BINANCE_API_KEY') apiKey: string, @Inject('BINANCE_SECRET_KEY') secretKey: string) {
     this.binanceClient = Binance({
       apiKey: apiKey,
       apiSecret: secretKey,
+      httpBase: 'https://testnet.binance.vision',
     });
   }
 
-  async createOrder(orderDetails: CreateOrderDto): Promise<IOrderEvent> {
-    const orderResponse = await this.binanceClient.order({
-      symbol: orderDetails.symbol,
-      side: orderDetails.side,
-      quantity: orderDetails.quantity,
-      price: orderDetails.price,
-      type: orderDetails.type,
-    });
+  async createOrder(orderDetails: CreateOrderDto): Promise<IOrderProps> {
+    Logger.debug(`[BinanceApiService] Creating order: [${JSON.stringify(orderDetails, null, 2)}]`);
+    try {
+      const orderResponse = await this.binanceClient.order({
+        symbol: orderDetails.symbol,
+        side: orderDetails.orderSide,
+        quantity: orderDetails.quantity,
+        price: orderDetails.price,
+        type: orderDetails.orderType,
+        timeInForce: orderDetails.timeInForce,
+      });
 
-    const orderCreatedEvent = new OrderCreatedEvent(this.mapBinanceResponseToOrderEventDto(orderResponse));
+      Logger.debug(`[BinanceApiService] Order created: [${JSON.stringify(orderResponse, null, 2)}]`);
 
-    return this.eventStore.save(orderCreatedEvent);
+      const orderCreatedResponse = this.mapBinanceResponseToOrderEventDto(orderResponse);
+
+      return orderCreatedResponse;
+    } catch (error) {
+      Logger.error(`[BinanceApiService] Error creating order: [${JSON.stringify(error, null, 2)}]`);
+
+      throw new OrderCreationFailedError(error.message);
+    }
   }
 
   async cancelOrder(data: CancelOrderDto): Promise<any> {
     return this.binanceClient.cancelOrder({ symbol: data.symbol, orderId: data.orderId });
   }
 
-  private mapBinanceResponseToOrderEventDto(response: any): OrderEventDto {
-    const orderEventDto = new OrderEventDto();
-    orderEventDto.orderId = response.orderId.toString(); // convert orderId to string
-
+  private mapBinanceResponseToOrderEventDto(response: any): IOrderProps {
     let orderSide: OrderSide;
     if (response.side === 'BUY') {
       orderSide = OrderSide.BUY;
@@ -125,8 +130,9 @@ export class BinanceApiService {
         timeInForce = TimeInForce.GTC; // or some default value
     }
 
-    orderEventDto.eventData = {
-      id: response.clientOrderId, // Assuming clientOrderId is your IOrderProps.id
+    const props: IOrderProps = {
+      id: response.orderId.toString(),
+      clientOrderId: response.clientOrderId,
       symbol: response.symbol,
       orderSide: orderSide,
       orderType: orderType,
@@ -137,9 +143,10 @@ export class BinanceApiService {
       createdAt: new Date(response.transactTime),
       updatedAt: new Date(), // if binance doesn't provide update time
       timeInForce: timeInForce,
+      cummulativeQuoteQuantity: parseFloat(response.cummulativeQuoteQty),
       // fill stopPrice and icebergQuantity as needed
     };
 
-    return orderEventDto;
+    return props;
   }
 }
