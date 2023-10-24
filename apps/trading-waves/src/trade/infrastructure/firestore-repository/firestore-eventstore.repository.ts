@@ -5,7 +5,6 @@ import { IOrderEvent, ISavedOrderEvent, isOrderEvent } from '../../domain/events
 import { Order } from '../../domain/order.aggregate';
 import { OrderInvalidEventTypeError } from '../../domain/errors/order.errors';
 import * as uuid from 'uuid';
-import { log } from 'console';
 
 @Injectable()
 export class FirestoreEventStore implements IEventStore {
@@ -48,11 +47,7 @@ export class FirestoreEventStore implements IEventStore {
         //TODO: retry after a while
         Logger.error(error);
       }
-
-      //const savedEventDocument = await documentRef.get();
     }
-    //Logger.debug(`Committing events for order ${order.props.id}`);
-    //order.commit();
   }
 
   async getEventsForOrder(orderId: string): Promise<IOrderEvent[]> {

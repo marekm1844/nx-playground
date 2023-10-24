@@ -25,5 +25,14 @@ export interface IOrderEvent {
 export interface ISavedOrderEvent extends IOrderEventMetadata, IOrderEvent {}
 
 export function isOrderEvent(event: IEvent): event is IOrderEvent {
-  return (event as IOrderEvent).payload.id !== undefined;
+  return (
+    typeof event === 'object' &&
+    event !== null &&
+    'eventType' in event &&
+    Object.values(OrderEventType).includes(event.eventType as OrderEventType) &&
+    'payload' in event &&
+    typeof event.payload === 'object' &&
+    event.payload !== null &&
+    'id' in event.payload
+  );
 }
