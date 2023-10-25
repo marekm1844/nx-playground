@@ -20,7 +20,7 @@ export enum OrderStatus {
   OPEN = 'open',
   FILLED = 'filled',
   PARTIALLY_FILLED = 'partially_filled',
-  CANCELED = 'canceled',
+  CANCELLED = 'cancelled',
   PENDING_CANCEL = 'pending_cancel',
   REJECTED = 'rejected',
   EXPIRED = 'expired',

@@ -3,7 +3,7 @@ import Binance from 'binance-api-node';
 import { IOrderProps, OrderSide, OrderStatus, OrderType, TimeInForce } from '../domain/models/order.interface';
 import { CreateOrderDto } from '../domain/dto/create-order.dto';
 import { CancelOrderDto } from '../domain/dto/cancel-order.dto';
-import { OrderCreationFailedError } from '../domain/errors/trade.errors';
+import { OrderCancelFailError, OrderCreationFailedError } from '../domain/errors/trade.errors';
 
 @Injectable()
 export class BinanceApiService {
@@ -41,8 +41,15 @@ export class BinanceApiService {
     }
   }
 
-  async cancelOrder(data: CancelOrderDto): Promise<any> {
-    return this.binanceClient.cancelOrder({ symbol: data.symbol, orderId: data.orderId });
+  async cancelOrder(data: CancelOrderDto): Promise<IOrderProps> {
+    try {
+      const orderResponse = await this.binanceClient.cancelOrder({ symbol: data.symbol, orderId: data.orderId });
+      return this.mapBinanceResponseToOrderEventDto(orderResponse);
+    } catch (error) {
+      Logger.error(`[BinanceApiService] Error cancelling order: [${JSON.stringify(error, null, 2)}]`);
+
+      throw new OrderCancelFailError(error.message);
+    }
   }
 
   private mapBinanceResponseToOrderEventDto(response: any): IOrderProps {
@@ -97,7 +104,7 @@ export class BinanceApiService {
         orderStatus = OrderStatus.PARTIALLY_FILLED;
         break;
       case 'CANCELED':
-        orderStatus = OrderStatus.CANCELED;
+        orderStatus = OrderStatus.CANCELLED;
         break;
       case 'PENDING_CANCEL':
         orderStatus = OrderStatus.PENDING_CANCEL;

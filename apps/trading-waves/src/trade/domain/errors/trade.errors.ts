@@ -32,3 +32,10 @@ export class OrderCreationFailedError extends TradeError {
     this.name = 'OrderCreationFailedError';
   }
 }
+
+export class OrderCancelFailError extends TradeError {
+  constructor(reason: string) {
+    super(`Order cancel failed: ${reason}`);
+    this.name = 'OrderCancelFailError';
+  }
+}

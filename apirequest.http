@@ -50,5 +50,14 @@ content-type: application/json
 {
   "symbol": "RUNEBUSD",
   "quantity": "6",
-  "price": "2.5"
+  "price": "2.2"
+}
+
+### TEST:Cancel Order  TEST
+POST http://localhost:3000/api/orders/cancel HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "RUNEBUSD",
+  "orderId": "191057"
 }

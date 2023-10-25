@@ -23,13 +23,14 @@ export class FirestoreEventStore implements IEventStore {
         throw new OrderInvalidEventTypeError();
       }
       // Retrieve the current max sequence number for this order
-      const maxSeqNumberSnapshot = await this.collection.where('orderId', '==', order.props.id).orderBy('sequenceNumber', 'desc').limit(1).get();
+      const maxSeqNumberSnapshot = await this.collection.where('aggregateId', '==', order.props.id).orderBy('sequenceNumber', 'desc').limit(1).get();
 
+      //Logger.debug(`maxSeqNumberSnapshot before increment: ${JSON.stringify(maxSeqNumberSnapshot.docs[0].data().sequenceNumber)}`);
       let sequenceNumber = 1;
       if (!maxSeqNumberSnapshot.empty) {
         sequenceNumber = maxSeqNumberSnapshot.docs[0].data().sequenceNumber + 1;
       }
-
+      Logger.debug(`maxSeqNumberSnapshot after increment: ${JSON.stringify(sequenceNumber)}`);
       const storedOrder: ISavedOrderEvent = {
         payload: event.payload,
         eventId: uuid.v4(),
@@ -50,8 +51,15 @@ export class FirestoreEventStore implements IEventStore {
     }
   }
 
-  async getEventsForOrder(orderId: string): Promise<IOrderEvent[]> {
-    const querySnapshot = await this.collection.where('orderId', '==', orderId).orderBy('sequenceNumber').get();
-    return querySnapshot.docs.map(doc => doc.data() as IOrderEvent);
+  async getEventsForOrder(orderId: string): Promise<Order | null> {
+    const querySnapshot = await this.collection.where('aggregateId', '==', orderId).orderBy('sequenceNumber').get();
+    const events = querySnapshot.docs.map(doc => doc.data() as IOrderEvent);
+
+    if (events.length === 0) {
+      return null;
+    }
+
+    Logger.debug(`Retrieved ${events.length} events for order ${orderId}`);
+    return Order.fromEvents(events);
   }
 }

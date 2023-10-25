@@ -16,7 +16,7 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
 
   async execute(command: CreateOrderCommand) {
     const orderDetails = await this.binanceApiService.createOrder(command.createOrderDto);
-    const order = this.publisher.mergeObjectContext(new Order(orderDetails));
+    const order = this.publisher.mergeObjectContext(Order.createNew(orderDetails));
 
     try {
       await this.eventStore.save(order);

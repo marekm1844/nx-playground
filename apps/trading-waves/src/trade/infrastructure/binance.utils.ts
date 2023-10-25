@@ -52,7 +52,7 @@ export function mapBinanceResponseToOrderProps(response: any): IOrderProps {
       orderStatus = OrderStatus.PARTIALLY_FILLED;
       break;
     case 'CANCELED':
-      orderStatus = OrderStatus.CANCELED;
+      orderStatus = OrderStatus.CANCELLED;
       break;
     case 'PENDING_CANCEL':
       orderStatus = OrderStatus.PENDING_CANCEL;

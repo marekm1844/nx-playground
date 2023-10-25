@@ -6,12 +6,14 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { CreateOrderHandler } from './app/handlers/create-order.handler';
 import { BinanceApiService } from './infrastructure/binance-api.service';
 import { FirestoreClient } from '../shared/repository/firestore.client';
+import { CancelOrderHandler } from './app/handlers/cancel-orer.handler';
 
 @Module({
   imports: [CqrsModule],
   providers: [
     FirestoreClient,
     CreateOrderHandler,
+    CancelOrderHandler,
     BinanceApiService,
     {
       provide: 'BINANCE_API_KEY',
