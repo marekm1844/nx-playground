@@ -3,6 +3,8 @@ import { CancelOrderCommand } from '../commands/cancel-order.command';
 import { Inject, Logger } from '@nestjs/common';
 import { IEventStore } from '../../domain/repositories/event-store.interface';
 import { BinanceApiService } from '../../infrastructure/binance-api.service';
+import { OrderNotFoundError } from '../../domain/errors/order.errors';
+import { OrderCancelFailError } from '../../domain/errors/trade.errors';
 
 @CommandHandler(CancelOrderCommand)
 export class CancelOrderHandler implements ICommandHandler<CancelOrderCommand> {
@@ -12,9 +14,9 @@ export class CancelOrderHandler implements ICommandHandler<CancelOrderCommand> {
     const order = await this.eventStore.getEventsForOrder(command.cancelOrderDto.orderId);
 
     if (!order) {
-      throw new Error('Order not found');
+      throw new OrderNotFoundError();
     }
-    Logger.log(`[CancelOrderHandler] oreder: [${JSON.stringify(order, null, 2)}]`);
+    Logger.debug(`[CancelOrderHandler] oreder: [${JSON.stringify(order, null, 2)}]`);
     //cancel order
     try {
       await this.binanceApiService.cancelOrder(command.cancelOrderDto);
@@ -25,7 +27,7 @@ export class CancelOrderHandler implements ICommandHandler<CancelOrderCommand> {
       orderCancelledEvent.commit();
       console.log(`[CancelOrderHandler] command: [${JSON.stringify(command, null, 2)}]`);
     } catch (error) {
-      throw new Error('Error cancelling order');
+      throw new OrderCancelFailError(error.message);
     }
   }
 }

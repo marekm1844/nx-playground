@@ -6,15 +6,17 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { CreateOrderHandler } from './app/handlers/create-order.handler';
 import { BinanceApiService } from './infrastructure/binance-api.service';
 import { FirestoreClient } from '../shared/repository/firestore.client';
-import { CancelOrderHandler } from './app/handlers/cancel-orer.handler';
+import { CancelOrderHandler } from './app/handlers/cancel-order.handler';
+import { SaveOrderToRepositoryHandler } from './app/handlers/save-order-to-repository.handler';
+
+const CommandHandlers = [CreateOrderHandler, CancelOrderHandler, SaveOrderToRepositoryHandler];
 
 @Module({
   imports: [CqrsModule],
   providers: [
     FirestoreClient,
-    CreateOrderHandler,
-    CancelOrderHandler,
     BinanceApiService,
+    ...CommandHandlers,
     {
       provide: 'BINANCE_API_KEY',
       useFactory: (configService: ConfigService) => {
@@ -26,6 +28,13 @@ import { CancelOrderHandler } from './app/handlers/cancel-orer.handler';
       provide: 'BINANCE_SECRET_KEY',
       useFactory: (configService: ConfigService) => {
         return configService.get<string>('BINANCE_SECRET_KEY');
+      },
+      inject: [ConfigService],
+    },
+    {
+      provide: 'FIREBASE_ORDER_COLLECTION',
+      useFactory: (configService: ConfigService) => {
+        return configService.get<string>('FIREBASE_ORDER_COLLECTION');
       },
       inject: [ConfigService],
     },

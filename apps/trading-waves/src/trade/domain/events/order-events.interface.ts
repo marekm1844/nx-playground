@@ -1,5 +1,6 @@
 import { IEvent } from '@nestjs/cqrs';
 import { IOrderProps } from '../models/order.interface';
+import { Order } from '../order.aggregate';
 
 export enum OrderEventType {
   CREATED = 'OrderCreated',

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { FirestoreClient } from '../../../shared/repository/firestore.client';
 import { IEventStore } from '../../domain/repositories/event-store.interface';
 import { IOrderEvent, ISavedOrderEvent, isOrderEvent } from '../../domain/events/order-events.interface';
@@ -10,9 +10,7 @@ import * as uuid from 'uuid';
 export class FirestoreEventStore implements IEventStore {
   private readonly collection;
 
-  constructor(private firestoreClient: FirestoreClient) {
-    const env = process.env.NODE_ENV || 'development';
-    const collectionName = env === 'production' ? 'order_events' : 'order_events_test';
+  constructor(private firestoreClient: FirestoreClient, @Inject('FIREBASE_ORDER_COLLECTION') private readonly collectionName: string) {
     this.collection = this.firestoreClient.firestore.collection(collectionName);
   }
 
@@ -30,7 +28,7 @@ export class FirestoreEventStore implements IEventStore {
       if (!maxSeqNumberSnapshot.empty) {
         sequenceNumber = maxSeqNumberSnapshot.docs[0].data().sequenceNumber + 1;
       }
-      Logger.debug(`maxSeqNumberSnapshot after increment: ${JSON.stringify(sequenceNumber)}`);
+      //Logger.debug(`maxSeqNumberSnapshot after increment: ${JSON.stringify(sequenceNumber)}`);
       const storedOrder: ISavedOrderEvent = {
         payload: event.payload,
         eventId: uuid.v4(),

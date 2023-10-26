@@ -34,7 +34,7 @@ export class Order extends AggregateRoot {
     const order = new Order({
       ...props,
     });
-    order.apply(new OrderCreatedEvent(order._props));
+    order.apply(new OrderCreatedEvent(order.props));
     return order;
   }
 
