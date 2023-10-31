@@ -28,6 +28,22 @@ export class OrderController {
     //console.log(`[OrderController] Order created: [${JSON.stringify(createOrderDto, null, 2)}]`);
   }
 
+  @Post('sell')
+  async sell(@Body() createOrderRequest: CreateOrderRequest) {
+    const createOrderDto: CreateOrderDto = {
+      symbol: createOrderRequest.symbol,
+      orderSide: OrderSide.SELL,
+      orderType: OrderType.LIMIT,
+      quantity: Number(createOrderRequest.quantity),
+      price: Number(createOrderRequest.price),
+      timeInForce: TimeInForce.GTC,
+    };
+    const command = new CreateOrderCommand(createOrderDto);
+    const order = await this.commandBus.execute(command);
+    return { message: 'Order created successfully', order };
+    //console.log(`[OrderController] Order created: [${JSON.stringify(createOrderDto, null, 2)}]`);
+  }
+
   @Post('cancel')
   async cancel(@Body() cancelOrderRequest: { symbol: string; orderId: string }) {
     const cancelOrderDto: CancelOrderDto = {

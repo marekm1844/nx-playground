@@ -8,8 +8,11 @@ import { BinanceApiService } from './infrastructure/binance-api.service';
 import { FirestoreClient } from '../shared/repository/firestore.client';
 import { CancelOrderHandler } from './app/handlers/cancel-order.handler';
 import { SaveOrderToRepositoryHandler } from './app/handlers/save-order-to-repository.handler';
+import { FirestoreProfitLossRepository } from './infrastructure/firestore-repository/firestore-profit-loss.repository';
+import { UpdateProfitLossTrackerHandler } from './app/handlers/update-profit-loss-tracker.handler';
+import { OrderSaga } from './app/sagas/order.saga';
 
-const CommandHandlers = [CreateOrderHandler, CancelOrderHandler, SaveOrderToRepositoryHandler];
+const CommandHandlers = [CreateOrderHandler, CancelOrderHandler, SaveOrderToRepositoryHandler, UpdateProfitLossTrackerHandler];
 
 @Module({
   imports: [CqrsModule],
@@ -17,6 +20,7 @@ const CommandHandlers = [CreateOrderHandler, CancelOrderHandler, SaveOrderToRepo
     FirestoreClient,
     BinanceApiService,
     ...CommandHandlers,
+    OrderSaga,
     {
       provide: 'BINANCE_API_KEY',
       useFactory: (configService: ConfigService) => {
@@ -39,10 +43,22 @@ const CommandHandlers = [CreateOrderHandler, CancelOrderHandler, SaveOrderToRepo
       inject: [ConfigService],
     },
     {
+      provide: 'FIREBASE_PROFITLOST_TRACKER_COLLECTION',
+      useFactory: (configService: ConfigService) => {
+        return configService.get<string>('FIREBASE_PROFITLOST_TRACKER_COLLECTION');
+      },
+      inject: [ConfigService],
+    },
+    {
       provide: 'IEventStore',
       useClass: FirestoreEventStore,
     },
+    {
+      provide: 'IProfitLossRepository',
+      useClass: FirestoreProfitLossRepository,
+    },
     FirestoreEventStore,
+    FirestoreProfitLossRepository,
   ],
   controllers: [OrderController],
   exports: [],

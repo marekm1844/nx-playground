@@ -4,6 +4,7 @@ import { OrderCreatedEvent } from './events/order-created.event';
 import { v4 as uuidv4 } from 'uuid';
 import { OrderCancelledEvent } from './events/order-cancelled.event';
 import { IOrderEvent } from './events/order-events.interface';
+import { OrderFilledEvent } from './events/order-filled.event';
 
 export class Order extends AggregateRoot {
   private _props: IOrderProps;
@@ -35,6 +36,9 @@ export class Order extends AggregateRoot {
       ...props,
     });
     order.apply(new OrderCreatedEvent(order.props));
+    if (order.props.status === OrderStatus.FILLED) {
+      order.apply(new OrderFilledEvent(order.props));
+    }
     return order;
   }
 

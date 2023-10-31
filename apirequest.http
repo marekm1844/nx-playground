@@ -53,11 +53,32 @@ content-type: application/json
   "price": "2.2"
 }
 
+
+### TEST:Create Order  TEST2
+POST http://localhost:3000/api/orders HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "RUNEBUSD",
+  "quantity": "6",
+  "price": "2.96"
+}
+
+### TEST:Create Order SELL TEST2
+POST http://localhost:3000/api/orders/sell HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "RUNEBUSD",
+  "quantity": "6",
+  "price": "2.90"
+}
+
 ### TEST:Cancel Order  TEST
 POST http://localhost:3000/api/orders/cancel HTTP/1.1
 content-type: application/json
 
 {
   "symbol": "RUNEBUSD",
-  "orderId": "229610"
+  "orderId": "312731"
 }
