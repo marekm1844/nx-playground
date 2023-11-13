@@ -1,6 +1,6 @@
 import { ICommand } from '@nestjs/cqrs';
-import { IOrderProps } from '../../domain/models/order.interface';
+import { UpdateOrderDto } from '../../domain/dto/update-order.dto';
 
 export class UpdateOrderCommand implements ICommand {
-  constructor(public readonly updateOrderDto: IOrderProps) {}
+  constructor(public readonly updateOrderDto: UpdateOrderDto) {}
 }

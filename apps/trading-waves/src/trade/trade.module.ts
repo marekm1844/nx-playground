@@ -11,13 +11,19 @@ import { SaveOrderToRepositoryHandler } from './app/handlers/save-order-to-repos
 import { FirestoreProfitLossRepository } from './infrastructure/firestore-repository/firestore-profit-loss.repository';
 import { UpdateProfitLossTrackerHandler } from './app/handlers/update-profit-loss-tracker.handler';
 import { OrderSaga } from './app/sagas/order.saga';
+import { BinanceWebsocketService } from './infrastructure/binance-websocket.service';
+import { UpdateOrderHandler } from './app/handlers/update-order.handler';
+import { ListenForOrderUpdatesHandler } from './app/handlers/listen-update-order.handler';
+import { BinanceConnectorWebsocketService } from './infrastructure/binance-connector-websocket.service';
 
-const CommandHandlers = [CreateOrderHandler, CancelOrderHandler, SaveOrderToRepositoryHandler, UpdateProfitLossTrackerHandler];
+const CommandHandlers = [CreateOrderHandler, CancelOrderHandler, SaveOrderToRepositoryHandler, UpdateProfitLossTrackerHandler, UpdateOrderHandler, ListenForOrderUpdatesHandler];
 
 @Module({
   imports: [CqrsModule],
   providers: [
     FirestoreClient,
+    // BinanceWebsocketService,
+    BinanceConnectorWebsocketService,
     BinanceApiService,
     ...CommandHandlers,
     OrderSaga,

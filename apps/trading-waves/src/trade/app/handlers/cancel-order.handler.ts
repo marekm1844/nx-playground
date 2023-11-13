@@ -20,7 +20,7 @@ export class CancelOrderHandler implements ICommandHandler<CancelOrderCommand> {
     //cancel order
     try {
       await this.binanceApiService.cancelOrder(command.cancelOrderDto);
-      order.cancelOrder();
+      order.cancelOrder(command.cancelOrderDto.orderStatus);
       await this.eventStore.save(order);
       const orderCancelledEvent = this.publisher.mergeObjectContext(order);
 

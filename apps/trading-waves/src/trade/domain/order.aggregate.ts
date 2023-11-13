@@ -50,12 +50,23 @@ export class Order extends AggregateRoot {
     return order;
   }
 
-  cancelOrder() {
+  cancelOrder(status: OrderStatus) {
     if (this._props.status !== OrderStatus.OPEN) throw new Error('Order status must be OPEN when cancelling');
-    this._props.status = OrderStatus.CANCELLED;
+    this._props.status = status;
     this._props.updatedAt = new Date();
 
     this.apply(new OrderCancelledEvent(this._props));
+  }
+
+  updateOrderFilled(quantity: number, price: number, status: OrderStatus) {
+    //TODO: can add more cases for partially filled orders. Maybe we can track somewhere it the BUY order was completly SOLD before accepting new order.
+    if (this._props.status !== OrderStatus.OPEN) throw new Error('Order status must be OPEN when updating filled');
+    this._props.status = status;
+    this._props.executedQuantity = quantity;
+    this._props.price = price;
+    this._props.updatedAt = new Date();
+
+    this.apply(new OrderFilledEvent(this._props));
   }
 
   //applyEvents() {

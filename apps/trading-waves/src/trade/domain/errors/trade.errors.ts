@@ -39,3 +39,10 @@ export class OrderCancelFailError extends TradeError {
     this.name = 'OrderCancelFailError';
   }
 }
+
+export class OrderFillFailError extends TradeError {
+  constructor(reason: string) {
+    super(`Order fill failed: ${reason}`);
+    this.name = 'OrderFillFailError';
+  }
+}

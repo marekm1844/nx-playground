@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { CreateOrderDto } from '../domain/dto/create-order.dto';
 import { CreateOrderCommand } from './commands/create-order.commands';
 import { CommandBus } from '@nestjs/cqrs';
-import { OrderSide, OrderType, TimeInForce } from '../domain/models/order.interface';
+import { OrderSide, OrderStatus, OrderType, TimeInForce } from '../domain/models/order.interface';
 import { CancelOrderDto } from '../domain/dto/cancel-order.dto';
 import { CancelOrderCommand } from './commands/cancel-order.command';
 
@@ -49,6 +49,7 @@ export class OrderController {
     const cancelOrderDto: CancelOrderDto = {
       symbol: cancelOrderRequest.symbol,
       orderId: cancelOrderRequest.orderId,
+      orderStatus: OrderStatus.CANCELLED,
     };
     await this.commandBus.execute(new CancelOrderCommand(cancelOrderDto));
     return { message: 'Order cancelled successfully' };

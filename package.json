@@ -16,6 +16,8 @@
   },
   "private": true,
   "dependencies": {
+    "@binance/connector": "^3.0.0",
+    "@binance/connector-typescript": "^0.3.3",
     "@nestjs/bullmq": "^1.1.0",
     "@nestjs/cache-manager": "^1.0.0",
     "@nestjs/common": "^9.0.0",
