@@ -30,30 +30,55 @@ export class BinanceConnectorWebsocketService {
         Logger.log(`[BinanceConnectorWebsocketService] Websocket message received: ${data}`);
         if (isExecutionReportEvent(event)) {
           switch (event.X) {
-            case 'PARTIALLY_FILLED' || 'FILLED':
+            case 'PARTIALLY_FILLED':
               this.commandBus.execute(
                 new FillOrderCommand({
                   symbol: event.s,
                   orderId: event.i,
                   filledQuantity: parseFloat(event.q),
                   filledPrice: parseFloat(event.p),
-                  orderStatus: event.X as OrderStatus,
+                  orderStatus: OrderStatus.PARTIALLY_FILLED,
                 }),
               );
               Logger.debug(
-                `[BinanceConnectorWebsocketService] Execution Report Details: [ Symbol: ${event.s + ' QTY: ' + event.q + ' PRICE: ' + event.p + ' STATUS: ' + event.X}]`,
+                `[BinanceConnectorWebsocketService] (PARTIALLY_FILLED) Execution Report Details: [ Symbol: ${
+                  event.s + ' QTY: ' + event.q + ' PRICE: ' + event.p + ' STATUS: ' + event.X
+                }]`,
               );
               break;
-            case 'EXPIRED' || 'REJECTED':
+            case 'FILLED':
+              this.commandBus.execute(
+                new FillOrderCommand({
+                  symbol: event.s,
+                  orderId: event.i,
+                  filledQuantity: parseFloat(event.q),
+                  filledPrice: parseFloat(event.p),
+                  orderStatus: OrderStatus.FILLED,
+                }),
+              );
+              Logger.debug(
+                `[BinanceConnectorWebsocketService] (FILLED) Execution Report Details: [ Symbol: ${event.s + ' QTY: ' + event.q + ' PRICE: ' + event.p + ' STATUS: ' + event.X}]`,
+              );
+              break;
+            case 'EXPIRED':
               this.commandBus.execute(
                 new CancelOrderCommand({
                   symbol: event.s,
                   orderId: event.i,
-                  orderStatus: event.X as OrderStatus,
+                  orderStatus: OrderStatus.EXPIRED,
                 }),
               );
-              Logger.debug(`[BinanceConnectorWebsocketService] Execution Report Details: [ Symbol: ${event.s + ' STATUS: ' + event.X}]`);
+              Logger.debug(`[BinanceConnectorWebsocketService] (EXPIRED) Execution Report Details: [ Symbol: ${event.s + ' STATUS: ' + event.X}]`);
               break;
+            case 'REJECTED':
+              this.commandBus.execute(
+                new CancelOrderCommand({
+                  symbol: event.s,
+                  orderId: event.i,
+                  orderStatus: OrderStatus.REJECTED,
+                }),
+              );
+              Logger.debug(`[BinanceConnectorWebsocketService] (REJECTED) Execution Report Details: [ Symbol: ${event.s + ' STATUS: ' + event.X}]`);
           }
         }
       },
