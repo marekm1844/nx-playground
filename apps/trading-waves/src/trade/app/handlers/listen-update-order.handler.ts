@@ -1,6 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ListenForOrderUpdatesCommand } from '../commands/listen-update-order.command';
-import { BinanceWebsocketService } from '../../infrastructure/binance-websocket.service';
 import { BinanceConnectorWebsocketService } from '../../infrastructure/binance-connector-websocket.service';
 
 @CommandHandler(ListenForOrderUpdatesCommand)

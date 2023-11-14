@@ -21,39 +21,55 @@ export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdatePro
     }
 
     if (tracker) {
-      tracker.lastUpdated = new Date();
-      if (orderDetails.orderSide === OrderSide.BUY) {
-        tracker.averageBuyPrice = (tracker.averageBuyPrice * tracker.totalBought + orderDetails.price * orderDetails.quantity) / (tracker.totalBought + orderDetails.quantity);
-        tracker.currrentQuantity += orderDetails.quantity;
-        tracker.totalBought += orderDetails.quantity;
-      } else {
-        tracker.averageSellPrice = (tracker.averageBuyPrice * tracker.totalSold + orderDetails.price * orderDetails.quantity) / (tracker.totalSold + orderDetails.quantity);
-        tracker.netProfitLoss = (tracker.averageSellPrice - tracker.averageBuyPrice) * orderDetails.quantity;
-        tracker.currrentQuantity -= orderDetails.quantity;
-        tracker.totalSold += orderDetails.quantity;
-      }
-      try {
-        await this.trackerRepository.save(tracker);
-      } catch (err) {
-        Logger.error(`[UpdateProfitLossTrackerHandler] Error updating profit loss tracker ${tracker.symbol}: ${err}]`);
-      }
+      this.updateTracker(tracker, orderDetails);
     } else {
-      //WARN: This will only support single user for now as we are not passing userId
-      tracker = {
-        symbol: orderDetails.symbol,
-        averageBuyPrice: OrderSide.BUY === orderDetails.orderSide ? orderDetails.price : 0,
-        averageSellPrice: OrderSide.SELL === orderDetails.orderSide ? orderDetails.price : 0,
-        currrentQuantity: orderDetails.quantity,
-        netProfitLoss: 0,
-        totalBought: OrderSide.BUY === orderDetails.orderSide ? orderDetails.quantity : 0,
-        totalSold: OrderSide.SELL === orderDetails.orderSide ? orderDetails.quantity : 0,
-        lastUpdated: new Date(),
-      };
-      try {
-        await this.trackerRepository.save(tracker);
-      } catch (err) {
-        Logger.error(`[UpdateProfitLossTrackerHandler] Error saving profit loss tracker ${tracker.symbol}: ${err}]`);
-      }
+      tracker = this.createNewTracker(orderDetails);
     }
+  }
+
+  private updateTracker(tracker, orderDetails) {
+    tracker.lastUpdated = new Date();
+    if (orderDetails.orderSide === OrderSide.BUY) {
+      this.updateBuyTracker(tracker, orderDetails);
+    } else {
+      this.updateSellTracker(tracker, orderDetails);
+    }
+    this.saveTracker(tracker);
+  }
+
+  private updateBuyTracker(tracker, orderDetails) {
+    tracker.averageBuyPrice = (tracker.averageBuyPrice * tracker.totalBought + orderDetails.price * orderDetails.quantity) / (tracker.totalBought + orderDetails.quantity);
+    tracker.currrentQuantity += orderDetails.quantity;
+    tracker.totalBought += orderDetails.quantity;
+  }
+
+  private updateSellTracker(tracker, orderDetails) {
+    tracker.averageSellPrice = (tracker.averageBuyPrice * tracker.totalSold + orderDetails.price * orderDetails.quantity) / (tracker.totalSold + orderDetails.quantity);
+    tracker.netProfitLoss = (tracker.averageSellPrice - tracker.averageBuyPrice) * orderDetails.quantity;
+    tracker.currrentQuantity -= orderDetails.quantity;
+    tracker.totalSold += orderDetails.quantity;
+  }
+
+  private saveTracker(tracker) {
+    try {
+      this.trackerRepository.save(tracker);
+    } catch (err) {
+      Logger.error(`[UpdateProfitLossTrackerHandler] Error updating profit loss tracker ${tracker.symbol}: ${err}]`);
+    }
+  }
+
+  private createNewTracker(orderDetails) {
+    const tracker = {
+      symbol: orderDetails.symbol,
+      averageBuyPrice: OrderSide.BUY === orderDetails.orderSide ? orderDetails.price : 0,
+      averageSellPrice: OrderSide.SELL === orderDetails.orderSide ? orderDetails.price : 0,
+      currrentQuantity: orderDetails.quantity,
+      netProfitLoss: 0,
+      totalBought: OrderSide.BUY === orderDetails.orderSide ? orderDetails.quantity : 0,
+      totalSold: OrderSide.SELL === orderDetails.orderSide ? orderDetails.quantity : 0,
+      lastUpdated: new Date(),
+    };
+    this.saveTracker(tracker);
+    return tracker;
   }
 }

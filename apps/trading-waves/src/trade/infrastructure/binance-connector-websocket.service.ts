@@ -1,8 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { WebsocketStream, Spot } from '@binance/connector-typescript';
-import { UserDataStreamExecutionReportEvent, isExecutionReportEvent } from './binance-connector.interface';
+import { isExecutionReportEvent } from './binance-connector.interface';
 import { CommandBus } from '@nestjs/cqrs';
-import { UpdateOrderCommand } from '../app/commands/update-order.command';
 import { OrderStatus } from '../domain/models/order.interface';
 import { CancelOrderCommand } from '../app/commands/cancel-order.command';
 import { FillOrderCommand } from '../app/commands/fill-order.command';
