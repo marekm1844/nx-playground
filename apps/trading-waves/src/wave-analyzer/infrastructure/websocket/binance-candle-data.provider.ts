@@ -6,12 +6,16 @@ import { ICandle } from '../../../shared/models/candle-entity.interface';
 import { IWebSocketConnectionPool } from '../../../shared/events/infarstructure/websocket-connection-pool.interface';
 import { WebSocketNotFoundError } from './websocket-notfound.error';
 import { EventEmitter } from 'events';
+import { interval as rxinterval, Subject, takeUntil } from 'rxjs';
+import WebSocket from 'ws';
 
 @Injectable()
 export class BinanceCandleDataProvider implements ICandleDataProvider {
   private wasCloseIntentional: boolean;
   private messageQueue: string[] = [];
   private emitter = new EventEmitter();
+  private heartBeatIntervals: { [key: string]: Subject<void> } = {};
+  private isAlive: { [key: string]: boolean } = {}; // track connection's "alive" status
 
   constructor(private readonly candleFactory: ICandleFactory, @Inject('IWebSocketConnectionPool') private readonly connectionPool: IWebSocketConnectionPool) {
     this.wasCloseIntentional = false;
@@ -72,6 +76,18 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
 
     let resolve: ((value: ICandle | PromiseLike<ICandle>) => void) | null = null;
 
+    ws.on('open', () => {
+      // setup ping on connection open
+      this.isAlive[`${symbol}@${interval}`] = true;
+      this.setupHeartbeat(symbol, interval, ws);
+    });
+
+    ws.on('pong', () => {
+      // handle pong received
+      this.isAlive[`${symbol}@${interval}`] = true;
+      Logger.debug(`[pong] ${symbol}@${interval} is alive: ${this.isAlive[`${symbol}@${interval}`]}`);
+    });
+
     ws.on('message', (message: string) => {
       const data = JSON.parse(message);
       const candleData = data.k;
@@ -112,6 +128,9 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     });
 
     ws.on('close', () => {
+      // remove ping on connection close
+      this.removeHeartbeat(symbol, interval);
+
       Logger.debug(`WebSocket closed. ${symbol}@${interval} was closed intentionally: ${this.wasCloseIntentional}`);
       if (!this.wasCloseIntentional) {
         Logger.debug('[close] entering reconnect');
@@ -120,6 +139,41 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
         });
       }
     });
+  }
+
+  private removeHeartbeat(symbol: string, interval: string): void {
+    const subject = this.heartBeatIntervals[`${symbol}@${interval}`];
+    if (subject) {
+      subject.next();
+      subject.complete();
+      delete this.heartBeatIntervals[`${symbol}@${interval}`];
+    }
+  }
+
+  private setupHeartbeat(symbol: string, interval: string, ws: WebSocket): void {
+    this.removeHeartbeat(symbol, interval); // Ensure to clear any existing interval
+
+    const subject = new Subject<void>();
+    this.heartBeatIntervals[`${symbol}@${interval}`] = subject;
+
+    /**
+     * Send ping every 60 minutes.
+     */
+    rxinterval(60 * 60 * 1000)
+      .pipe(takeUntil(subject))
+      .subscribe(() => {
+        if (ws.readyState === ws.OPEN) {
+          if (this.isAlive[`${symbol}@${interval}`]) {
+            this.isAlive[`${symbol}@${interval}`] = false;
+            ws.ping(null);
+          } else {
+            this.wasCloseIntentional = false;
+            ws.terminate();
+            this.isAlive[`${symbol}@${interval}`] = false;
+            Logger.debug(`[setupHeartbeat] NOT ALIVE is alive: ${this.isAlive[`${symbol}@${interval}`]}`);
+          }
+        }
+      });
   }
 
   private async reconnect(symbol: string, interval: string): Promise<void> {
@@ -147,6 +201,7 @@ export class BinanceCandleDataProvider implements ICandleDataProvider {
     }
     this.wasCloseIntentional = manualClose;
     Logger.debug(`[close] wasCloseIntentional set to: ${this.wasCloseIntentional}, ${symbol}@${interval} `);
+    this.removeHeartbeat(symbol, interval);
     this.connectionPool.disconnect(symbol, interval);
   }
 }

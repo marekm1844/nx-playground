@@ -81,6 +81,7 @@ export class WaveAnalyzer {
       if (!currentWave) {
         currentWave = this.waveFactory.createWave(WaveType.Downtrend, symbol, interval, candle);
         wavesForCurrentPair.push(currentWave);
+        await this.waveRepository.save(currentWave);
         continue;
       }
 
@@ -103,6 +104,7 @@ export class WaveAnalyzer {
               Logger.log(`${rule.constructor.name} detected in unknown wave`);
               currentWave.addCandle(candle);
               isUptrend = currentWave.getType() === WaveType.Uptrend;
+              await this.waveRepository.save(currentWave);
               break;
 
             case WaveType.Uptrend:
@@ -110,6 +112,7 @@ export class WaveAnalyzer {
                 Logger.log(`${rule.constructor.name} detected in uptrend wave`);
                 currentWave.addCandle(candle);
                 isUptrend = true;
+                await this.waveRepository.save(currentWave);
               } else {
                 Logger.log(`Start ${rule.constructor.name} wave`);
                 currentWave.addCandle(candle);
@@ -125,6 +128,7 @@ export class WaveAnalyzer {
                 Logger.log(`Start ${rule.constructor.name} detected in downtrend wave`);
                 currentWave.addCandle(candle);
                 isUptrend = false;
+                await this.waveRepository.save(currentWave);
               } else {
                 Logger.log(`Start ${rule.constructor.name} wave`);
                 currentWave.addCandle(candle);
@@ -143,6 +147,7 @@ export class WaveAnalyzer {
 
               currentWave = this.waveFactory.createWave(newWaveType, symbol, interval, candle);
               wavesForCurrentPair.push(currentWave);
+              await this.waveRepository.save(currentWave);
               console.log(`Start of ${currentWave.getType()} wave at ${currentWave.getStartDateTime()}`);
               break;
           }

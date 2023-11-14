@@ -16,7 +16,9 @@ export class FirestoreWaveRepository implements IWaveRepository {
 
   async save(wave: IWave): Promise<IWave> {
     const firestoreWave = wave as FirestoreWave;
-    const documentRef = await this.collection.add(firestoreWave.toFirestoreDocument());
+    const documentRef = this.collection.doc(wave.id);
+    await documentRef.set(firestoreWave.toFirestoreDocument(), { merge: true });
+
     const savedWaveDocument = await documentRef.get();
     return FirestoreWave.fromFirestoreDocument(savedWaveDocument);
   }

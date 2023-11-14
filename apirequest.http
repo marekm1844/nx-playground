@@ -10,7 +10,7 @@ content-type: application/json
 
 {
   "symbol": "BTCUSDT",
-  "interval": "30m"
+  "interval": "1m"
 }
 
 ###PROD: Stop process and configure it  PROD
@@ -19,7 +19,7 @@ content-type: application/json
 
 {
   "symbol": "BTCUSDT",
-  "interval": "30m"
+  "interval": "1m"
 }
 
 
@@ -41,4 +41,44 @@ content-type: application/json
 {
   "symbol": "BTCUSDT",
   "interval": "1m"
+}
+
+### TEST:Create Order  TEST
+POST http://localhost:3000/api/orders HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "RUNEBUSD",
+  "quantity": "6",
+  "price": "2.2"
+}
+
+
+### TEST:Create Order  TEST2ndl
+POST http://localhost:3000/api/orders HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "RUNEBUSD",
+  "quantity": "6",
+  "price": "5"
+}
+
+### TEST:Create Order SELL TEST2
+POST http://localhost:3000/api/orders/sell HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "RUNEBUSD",
+  "quantity": "6",
+  "price": "2.6"
+}
+
+### TEST:Cancel Order  TEST
+POST http://localhost:3000/api/orders/cancel HTTP/1.1
+content-type: application/json
+
+{
+  "symbol": "RUNEBUSD",
+  "orderId": "511065"
 }

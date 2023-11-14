@@ -20,7 +20,13 @@ export class SameTypeFormationStrategy implements IFormationStrategy {
     }
 
     const timeDifference = Math.abs(new Date(wave.startdatetime).getTime() - new Date(lastWaveFromRepo.startdatetime).getTime());
+    /**
+     * 1.5 hours
+     */
     const timeDifferenceInHours = timeDifference / (1000 * 60 * 60);
+    Logger.debug(
+      `Time difference in hours: ${timeDifferenceInHours} for current wave startdatetime: ${wave.startdatetime} and last wave startdatetime: ${lastWaveFromRepo.startdatetime}`,
+    );
 
     if (wave.type === lastWaveFromRepo.type && timeDifferenceInHours <= 1.5) {
       Logger.log('Similar type formation detected');

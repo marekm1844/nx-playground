@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IWebSocketConnectionPool } from '../../../shared/events/infarstructure/websocket-connection-pool.interface';
-import { WebSocket } from 'ws';
+import WebSocket from 'ws';
 import { WebSocketNotFoundError } from './websocket-notfound.error';
 @Injectable()
 export class BinanceConnectionPool implements IWebSocketConnectionPool {
@@ -15,6 +15,7 @@ export class BinanceConnectionPool implements IWebSocketConnectionPool {
     let connection = this.pool.get(key);
     if (!connection) {
       try {
+        Logger.debug(`[connect] connection created for ${key}`);
         connection = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`);
         this.pool.set(key, connection);
         this.pool.forEach((value, key) => {
