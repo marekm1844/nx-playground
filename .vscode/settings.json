@@ -1,10 +1,9 @@
 {
-    "cSpell.words": [
-        "golevelup",
-        "nestjs",
-        "nrwl",
-        "typeorm"
-    ],
-    "typescript.suggest.paths": false,
-    "javascript.suggest.paths": false 
+  "cSpell.words": ["golevelup", "nestjs", "nrwl", "typeorm"],
+  "typescript.suggest.paths": false,
+  "javascript.suggest.paths": false,
+  "sonarlint.connectedMode.project": {
+    "connectionId": "marek-public-repos",
+    "projectKey": "marekm1844_nx-playground"
+  }
 }

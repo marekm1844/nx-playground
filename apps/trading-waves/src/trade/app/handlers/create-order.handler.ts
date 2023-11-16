@@ -37,16 +37,5 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
           Logger.error(`[CreateOrderHandler] Could not save the order: [${JSON.stringify(e, null, 2)}]`);
         },
       });
-
-    //try {
-    //await this.eventStore.save(order);
-    //order.commit();
-    //} catch (error) {
-    //throw new OrderRepositoryError(error.message);
-    //}
-
-    //this.binanceWebsocketService.listenForOrderUpates(orderDetails.id);
-
-    //console.log(`[CreateOrderHandler] Order created: [${JSON.stringify(command.createOrderDto, null, 2)}]`);
   }
 }

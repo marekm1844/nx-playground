@@ -18,8 +18,8 @@ class OrderInvalidError extends OrderError {
 }
 
 class OrderNotFoundError extends OrderError {
-  constructor() {
-    super('Order not found');
+  constructor(reason: string) {
+    super(`Order not found: ${reason}`);
   }
 }
 

@@ -4,6 +4,7 @@ import { UpdateProfitLossAfterOrderFilledCommand } from '../commands/update-prof
 import { Inject, Logger } from '@nestjs/common';
 import { IProfitLossTracker } from '../queries/profit-loss.readmodel.interface';
 import { OrderSide } from '../../domain/models/order.interface';
+import { ProfitLossEventDto } from '../../domain/dto/profit-loss-event.dto';
 
 @CommandHandler(UpdateProfitLossAfterOrderFilledCommand)
 export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdateProfitLossAfterOrderFilledCommand> {
@@ -23,11 +24,11 @@ export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdatePro
     if (tracker) {
       this.updateTracker(tracker, orderDetails);
     } else {
-      tracker = this.createNewTracker(orderDetails);
+      this.createNewTracker(orderDetails);
     }
   }
 
-  private updateTracker(tracker, orderDetails) {
+  private updateTracker(tracker: IProfitLossTracker, orderDetails: ProfitLossEventDto) {
     tracker.lastUpdated = new Date();
     if (orderDetails.orderSide === OrderSide.BUY) {
       this.updateBuyTracker(tracker, orderDetails);
@@ -37,14 +38,14 @@ export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdatePro
     this.saveTracker(tracker);
   }
 
-  private updateBuyTracker(tracker, orderDetails) {
-    tracker.averageBuyPrice = (tracker.averageBuyPrice * tracker.totalBought + orderDetails.price * orderDetails.quantity) / (tracker.totalBought + orderDetails.quantity);
+  private updateBuyTracker(tracker: IProfitLossTracker, orderDetails: ProfitLossEventDto) {
+    tracker.averageBuyPrice = (tracker.averageBuyPrice * tracker.totalBought + orderDetails.cummulativeQuoteQty) / (tracker.totalBought + orderDetails.quantity);
     tracker.currrentQuantity += orderDetails.quantity;
     tracker.totalBought += orderDetails.quantity;
   }
 
-  private updateSellTracker(tracker, orderDetails) {
-    tracker.averageSellPrice = (tracker.averageBuyPrice * tracker.totalSold + orderDetails.price * orderDetails.quantity) / (tracker.totalSold + orderDetails.quantity);
+  private updateSellTracker(tracker: IProfitLossTracker, orderDetails: ProfitLossEventDto) {
+    tracker.averageSellPrice = (tracker.averageSellPrice * tracker.totalSold + orderDetails.cummulativeQuoteQty) / (tracker.totalSold + orderDetails.quantity);
     tracker.netProfitLoss = (tracker.averageSellPrice - tracker.averageBuyPrice) * orderDetails.quantity;
     tracker.currrentQuantity -= orderDetails.quantity;
     tracker.totalSold += orderDetails.quantity;
@@ -58,11 +59,11 @@ export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdatePro
     }
   }
 
-  private createNewTracker(orderDetails) {
+  private createNewTracker(orderDetails: ProfitLossEventDto) {
     const tracker = {
       symbol: orderDetails.symbol,
-      averageBuyPrice: OrderSide.BUY === orderDetails.orderSide ? orderDetails.price : 0,
-      averageSellPrice: OrderSide.SELL === orderDetails.orderSide ? orderDetails.price : 0,
+      averageBuyPrice: OrderSide.BUY === orderDetails.orderSide ? orderDetails.cummulativeQuoteQty / orderDetails.quantity : 0,
+      averageSellPrice: OrderSide.SELL === orderDetails.orderSide ? orderDetails.cummulativeQuoteQty / orderDetails.quantity : 0,
       currrentQuantity: orderDetails.quantity,
       netProfitLoss: 0,
       totalBought: OrderSide.BUY === orderDetails.orderSide ? orderDetails.quantity : 0,

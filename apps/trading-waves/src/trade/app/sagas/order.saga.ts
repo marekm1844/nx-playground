@@ -8,6 +8,7 @@ import { IOrderEvent } from '../../domain/events/order-events.interface';
 import { OrderFilledEvent } from '../../domain/events/order-filled.event';
 import { UpdateProfitLossAfterOrderFilledCommand } from '../commands/update-profitloss.command';
 import { ListenForOrderUpdatesCommand } from '../commands/listen-update-order.command';
+import { OrderStatus } from '../../domain/models/order.interface';
 
 @Injectable()
 export class OrderSaga {
@@ -23,6 +24,7 @@ export class OrderSaga {
           orderSide: event.payload.orderSide,
           quantity: event.payload.executedQuantity,
           price: event.payload.price,
+          cummulativeQuoteQty: event.payload.cummulativeQuoteQuantity,
         });
       }),
     );
@@ -34,7 +36,10 @@ export class OrderSaga {
       ofType(OrderCreatedEvent),
       map((event: OrderCreatedEvent) => {
         console.debug(`[OrderSaga] Order created`);
-        return new ListenForOrderUpdatesCommand(event.payload.symbol, event.payload.id);
+
+        if (event.payload.status !== OrderStatus.FILLED) {
+          return new ListenForOrderUpdatesCommand(event.payload.symbol, event.payload.id);
+        }
       }),
     );
   };

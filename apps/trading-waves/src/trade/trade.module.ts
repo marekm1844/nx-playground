@@ -14,8 +14,17 @@ import { OrderSaga } from './app/sagas/order.saga';
 import { UpdateOrderHandler } from './app/handlers/update-order.handler';
 import { ListenForOrderUpdatesHandler } from './app/handlers/listen-update-order.handler';
 import { BinanceConnectorWebsocketService } from './infrastructure/binance-connector-websocket.service';
+import { FillOrderHandler } from './app/handlers/fill-order.handler';
 
-const CommandHandlers = [CreateOrderHandler, CancelOrderHandler, SaveOrderToRepositoryHandler, UpdateProfitLossTrackerHandler, UpdateOrderHandler, ListenForOrderUpdatesHandler];
+const CommandHandlers = [
+  CreateOrderHandler,
+  CancelOrderHandler,
+  SaveOrderToRepositoryHandler,
+  UpdateProfitLossTrackerHandler,
+  UpdateOrderHandler,
+  ListenForOrderUpdatesHandler,
+  FillOrderHandler,
+];
 
 @Module({
   imports: [CqrsModule],

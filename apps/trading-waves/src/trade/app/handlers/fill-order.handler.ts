@@ -1,7 +1,7 @@
 import { CommandHandler, EventPublisher } from '@nestjs/cqrs';
 import { FillOrderCommand } from '../commands/fill-order.command';
 import { BinanceApiService } from '../../infrastructure/binance-api.service';
-import { Inject } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { IEventStore } from '../../domain/repositories/event-store.interface';
 import { OrderNotFoundError } from '../../domain/errors/order.errors';
 import { OrderFillFailError } from '../../domain/errors/trade.errors';
@@ -13,8 +13,9 @@ export class FillOrderHandler {
   async execute(command: FillOrderCommand) {
     //Load order from event store
     const order = await this.eventStore.getEventsForOrder(command.fillOrderDto.orderId);
+    Logger.debug(`[FillOrderHandler] oreder: [${JSON.stringify(order, null, 2)}]`);
     if (!order) {
-      throw new OrderNotFoundError();
+      throw new OrderNotFoundError(command.fillOrderDto.orderId);
     }
     //fill order
     try {

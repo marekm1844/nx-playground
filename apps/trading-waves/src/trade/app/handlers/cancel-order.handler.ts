@@ -14,7 +14,7 @@ export class CancelOrderHandler implements ICommandHandler<CancelOrderCommand> {
     const order = await this.eventStore.getEventsForOrder(command.cancelOrderDto.orderId);
 
     if (!order) {
-      throw new OrderNotFoundError();
+      throw new OrderNotFoundError(command.cancelOrderDto.orderId);
     }
     Logger.debug(`[CancelOrderHandler] oreder: [${JSON.stringify(order, null, 2)}]`);
     //cancel order

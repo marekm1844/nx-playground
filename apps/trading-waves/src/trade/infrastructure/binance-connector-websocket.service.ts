@@ -79,7 +79,14 @@ export class BinanceConnectorWebsocketService {
               );
               Logger.debug(`[BinanceConnectorWebsocketService] (REJECTED) Execution Report Details: [ Symbol: ${event.s + ' STATUS: ' + event.X}]`);
           }
+          this.wsClient.disconnect();
         }
+      },
+      onerror: (error: any) => {
+        Logger.error(`[BinanceConnectorWebsocketService] Websocket error: ${error}`);
+        this.wsClient.disconnect();
+        this.wsClient = new WebsocketStream({ callbacks, wsURL: 'wss://testnet.binance.vision' });
+        this.wsClient.userData(key['listenKey']);
       },
     };
 

@@ -4,6 +4,7 @@ import { IOrderProps, OrderSide, OrderStatus, OrderType, TimeInForce } from '../
 import { CreateOrderDto } from '../domain/dto/create-order.dto';
 import { CancelOrderDto } from '../domain/dto/cancel-order.dto';
 import { OrderCancelFailError, OrderCreationFailedError } from '../domain/errors/trade.errors';
+import { BinanceOrderResponse, isBinanceOrderResponse } from './binance-response.interface';
 
 @Injectable()
 export class BinanceApiService {
@@ -44,7 +45,10 @@ export class BinanceApiService {
   async cancelOrder(data: CancelOrderDto): Promise<IOrderProps> {
     try {
       const orderResponse = await this.binanceClient.cancelOrder({ symbol: data.symbol, orderId: data.orderId });
-      return this.mapBinanceResponseToOrderEventDto(orderResponse);
+      if (isBinanceOrderResponse(orderResponse)) {
+        return this.mapBinanceResponseToOrderEventDto(orderResponse);
+      }
+      throw new Error('Response is not a BinanceOrderResponse');
     } catch (error) {
       Logger.error(`[BinanceApiService] Error cancelling order: [${JSON.stringify(error, null, 2)}]`);
 
@@ -52,7 +56,7 @@ export class BinanceApiService {
     }
   }
 
-  private mapBinanceResponseToOrderEventDto(response: any): IOrderProps {
+  private mapBinanceResponseToOrderEventDto(response: BinanceOrderResponse): IOrderProps {
     let orderSide: OrderSide;
     if (response.side === 'BUY') {
       orderSide = OrderSide.BUY;
