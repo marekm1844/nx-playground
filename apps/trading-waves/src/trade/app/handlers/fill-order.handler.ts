@@ -13,7 +13,6 @@ export class FillOrderHandler {
   async execute(command: FillOrderCommand) {
     //Load order from event store
     const order = await this.eventStore.getEventsForOrder(command.fillOrderDto.orderId);
-    Logger.debug(`[FillOrderHandler] oreder: [${JSON.stringify(order, null, 2)}]`);
     if (!order) {
       throw new OrderNotFoundError(command.fillOrderDto.orderId);
     }

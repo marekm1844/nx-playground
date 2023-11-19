@@ -89,3 +89,27 @@ describe('FirestoreEventStore', () => {
     expect(events).toEqual([mockEvent]);
   });
 });
+it('should retrieve events for a given order ID', async () => {
+  const orderId = 'order1';
+  const mockQuerySnapshot = {
+    size: 2,
+    docs: [
+      { data: jest.fn().mockReturnValue({ eventType: OrderEventType.CREATED, payload: { id: orderId } }) },
+      { data: jest.fn().mockReturnValue({ eventType: OrderEventType.UPDATED, payload: { id: orderId } }) },
+    ],
+  };
+  mockCollection.where.mockReturnThis();
+  mockCollection.orderBy.mockReturnThis();
+  mockCollection.get.mockResolvedValue(mockQuerySnapshot);
+
+  const result = await firestoreEventStore.getEventsForOrder(orderId);
+
+  expect(mockCollection.where).toHaveBeenCalledWith('aggregateId', '==', orderId);
+  expect(mockCollection.orderBy).toHaveBeenCalledWith('sequenceNumber');
+  expect(mockCollection.get).toHaveBeenCalledTimes(1);
+  expect(result).toEqual(expect.any(Order));
+  expect(result?.getUncommittedEvents()).toEqual([
+    { eventType: OrderEventType.CREATED, payload: { id: orderId } },
+    { eventType: OrderEventType.UPDATED, payload: { id: orderId } },
+  ]);
+});

@@ -25,7 +25,6 @@ export class OrderController {
     const command = new CreateOrderCommand(createOrderDto);
     const order = await this.commandBus.execute(command);
     return { message: 'Order created successfully', order };
-    //console.log(`[OrderController] Order created: [${JSON.stringify(createOrderDto, null, 2)}]`);
   }
 
   @Post('sell')
@@ -41,7 +40,6 @@ export class OrderController {
     const command = new CreateOrderCommand(createOrderDto);
     const order = await this.commandBus.execute(command);
     return { message: 'Order created successfully', order };
-    //console.log(`[OrderController] Order created: [${JSON.stringify(createOrderDto, null, 2)}]`);
   }
 
   @Post('cancel')
@@ -53,6 +51,21 @@ export class OrderController {
     };
     await this.commandBus.execute(new CancelOrderCommand(cancelOrderDto));
     return { message: 'Order cancelled successfully' };
-    //console.log(`[OrderController] Order cancelled: [${JSON.stringify(cancelOrderDto, null, 2)}]`);
   }
+
+  /**
+    @Get(':id')
+    async getOrder(@Param('id') orderid: string) {
+      Logger.debug(`[OrderController] getOrder: [${JSON.stringify(orderid, null, 2)}]`);
+      const fillOrderDto: FillOrderDto = {
+        symbol: 'RUNEBUSD',
+        orderId: orderid,
+        orderStatus: OrderStatus.FILLED,
+        filledQuantity: 0.1,
+        filledPrice: 1000,
+      };
+      await this.commandBus.execute(new FillOrderCommand(fillOrderDto));
+      return { message: 'Order filled' };
+    }
+  */
 }

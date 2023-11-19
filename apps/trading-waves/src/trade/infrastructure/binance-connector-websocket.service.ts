@@ -49,7 +49,7 @@ export class BinanceConnectorWebsocketService {
               this.commandBus.execute(
                 new FillOrderCommand({
                   symbol: event.s,
-                  orderId: event.i,
+                  orderId: parseInt(event.i).toString(),
                   filledQuantity: parseFloat(event.q),
                   filledPrice: parseFloat(event.p),
                   orderStatus: OrderStatus.FILLED,

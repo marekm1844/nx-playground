@@ -51,9 +51,7 @@ export class FirestoreEventStore implements IEventStore {
 
   async getEventsForOrder(orderId: string): Promise<Order | null> {
     const querySnapshot = await this.collection.where('aggregateId', '==', orderId).orderBy('sequenceNumber').get();
-    Logger.debug(`Retrieved ${querySnapshot.size} events for order ${orderId}`);
     const events = querySnapshot.docs.map(doc => doc.data() as IOrderEvent);
-    Logger.debug(`${JSON.stringify(events)}`);
 
     if (events.length === 0) {
       return null;
