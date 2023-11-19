@@ -41,7 +41,9 @@ export class FirestoreEventStore implements IEventStore {
 
       try {
         Logger.debug(`Saving event ${JSON.stringify(storedOrder)}`);
-        await this.collection.add(storedOrder);
+        const timestamp = Math.floor(Date.now() / 1000); // Get seconds from epoch
+        const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        await this.collection.doc(date + ':' + storedOrder.payload.symbol + ':' + timestamp).set(storedOrder, { merge: true });
       } catch (error) {
         //TODO: retry after a while
         Logger.error(error);

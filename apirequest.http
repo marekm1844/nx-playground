@@ -61,7 +61,7 @@ content-type: application/json
 {
   "symbol": "RUNEBUSD",
   "quantity": "6",
-  "price": "5.8"
+  "price": "5.5"
 }
 
 ### TEST:Create Order SELL TEST2
@@ -71,7 +71,7 @@ content-type: application/json
 {
   "symbol": "RUNEBUSD",
   "quantity": "6",
-  "price": "5.413"
+  "price": "5.44"
 }
 
 ### TEST:Cancel Order  TEST
@@ -80,7 +80,7 @@ content-type: application/json
 
 {
   "symbol": "RUNEBUSD",
-  "orderId": "795517"
+  "orderId": "848663"
 }
 
 ### TEST:Get Order
