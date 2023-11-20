@@ -2,9 +2,10 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { IProfitLossRepository } from '../../domain/repositories/profit-loss.interface';
 import { UpdateProfitLossAfterOrderFilledCommand } from '../commands/update-profitloss.command';
 import { Inject, Logger } from '@nestjs/common';
-import { IProfitLossTracker } from '../queries/profit-loss.readmodel.interface';
+import { IDailyProfitLossTracker, IProfitLossTracker, isDailyProfitLossTracker } from '../queries/profit-loss.readmodel.interface';
 import { OrderSide } from '../../domain/models/order.interface';
 import { ProfitLossEventDto } from '../../domain/dto/profit-loss-event.dto';
+import { CustomRepositoryCannotInheritRepositoryError } from 'typeorm';
 
 @CommandHandler(UpdateProfitLossAfterOrderFilledCommand)
 export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdateProfitLossAfterOrderFilledCommand> {
@@ -14,6 +15,7 @@ export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdatePro
     const orderDetails = command.orderDetails;
 
     let tracker: IProfitLossTracker;
+    let newTracker: IProfitLossTracker;
 
     try {
       tracker = await this.trackerRepository.getProfitLoss(orderDetails.symbol);
@@ -24,18 +26,36 @@ export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdatePro
     if (tracker) {
       this.updateTracker(tracker, orderDetails);
     } else {
-      this.createNewTracker(orderDetails);
+      newTracker = this.createNewTracker(orderDetails);
+    }
+
+    let dailyTracker: IDailyProfitLossTracker;
+    try {
+      const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      dailyTracker = await this.trackerRepository.getDailyProfitLoss(orderDetails.symbol, Number(date));
+    } catch (err) {
+      Logger.error(`[UpdateProfitLossTrackerHandler] Error getting daily profit loss tracker ${orderDetails.symbol}: ${err}]`);
+    }
+    if (dailyTracker) {
+      this.updateTracker(dailyTracker, orderDetails);
+    } else {
+      this.createNewDailyTracker(newTracker);
     }
   }
 
-  private updateTracker(tracker: IProfitLossTracker, orderDetails: ProfitLossEventDto) {
+  private updateTracker(tracker: IProfitLossTracker | IDailyProfitLossTracker, orderDetails: ProfitLossEventDto) {
     tracker.lastUpdated = new Date();
     if (orderDetails.orderSide === OrderSide.BUY) {
       this.updateBuyTracker(tracker, orderDetails);
     } else {
       this.updateSellTracker(tracker, orderDetails);
     }
-    this.saveTracker(tracker);
+    Logger.debug(`[UpdateProfitLossTrackerHandler] Updating profit loss tracker ${JSON.stringify(tracker)}`);
+    if (isDailyProfitLossTracker(tracker)) {
+      this.saveDailyTracker(tracker);
+    } else {
+      this.saveTracker(tracker);
+    }
   }
 
   private updateBuyTracker(tracker: IProfitLossTracker, orderDetails: ProfitLossEventDto) {
@@ -51,11 +71,19 @@ export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdatePro
     tracker.totalSold += orderDetails.quantity;
   }
 
-  private saveTracker(tracker) {
+  private saveTracker(tracker: IProfitLossTracker) {
     try {
       this.trackerRepository.save(tracker);
     } catch (err) {
       Logger.error(`[UpdateProfitLossTrackerHandler] Error updating profit loss tracker ${tracker.symbol}: ${err}]`);
+    }
+  }
+
+  private saveDailyTracker(tracker: IDailyProfitLossTracker) {
+    try {
+      this.trackerRepository.saveDaily(tracker);
+    } catch (err) {
+      Logger.error(`[UpdateProfitLossTrackerHandler] Error updating daily profit loss tracker ${tracker.symbol}: ${err}]`);
     }
   }
 
@@ -72,5 +100,15 @@ export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdatePro
     };
     this.saveTracker(tracker);
     return tracker;
+  }
+
+  private createNewDailyTracker(tracker: IProfitLossTracker) {
+    const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const dailyTracker = {
+      ...tracker,
+      date: Number(date),
+    };
+    this.saveDailyTracker(dailyTracker);
+    return dailyTracker;
   }
 }

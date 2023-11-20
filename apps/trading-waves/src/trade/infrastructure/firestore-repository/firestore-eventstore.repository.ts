@@ -5,6 +5,7 @@ import { IOrderEvent, ISavedOrderEvent, isOrderEvent } from '../../domain/events
 import { Order } from '../../domain/order.aggregate';
 import { OrderInvalidEventTypeError } from '../../domain/errors/order.errors';
 import * as uuid from 'uuid';
+import { OrderStatus } from '../../domain/models/order.interface';
 
 @Injectable()
 export class FirestoreEventStore implements IEventStore {
@@ -47,6 +48,12 @@ export class FirestoreEventStore implements IEventStore {
       } catch (error) {
         //TODO: retry after a while
         Logger.error(error);
+      }
+      /**
+       * This will break the loop if the order is filled, so we don't save another fill event for the same order
+       */
+      if (event.payload.status === OrderStatus.FILLED) {
+        break;
       }
     }
   }

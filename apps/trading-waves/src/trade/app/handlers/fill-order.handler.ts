@@ -5,6 +5,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { IEventStore } from '../../domain/repositories/event-store.interface';
 import { OrderNotFoundError } from '../../domain/errors/order.errors';
 import { OrderFillFailError } from '../../domain/errors/trade.errors';
+import { OrderStatus } from '../../domain/models/order.interface';
 
 @CommandHandler(FillOrderCommand)
 export class FillOrderHandler {
