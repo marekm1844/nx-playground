@@ -5,7 +5,6 @@ import { Inject, Logger } from '@nestjs/common';
 import { IDailyProfitLossTracker, IProfitLossTracker, isDailyProfitLossTracker } from '../queries/profit-loss.readmodel.interface';
 import { OrderSide } from '../../domain/models/order.interface';
 import { ProfitLossEventDto } from '../../domain/dto/profit-loss-event.dto';
-import { CustomRepositoryCannotInheritRepositoryError } from 'typeorm';
 
 @CommandHandler(UpdateProfitLossAfterOrderFilledCommand)
 export class UpdateProfitLossTrackerHandler implements ICommandHandler<UpdateProfitLossAfterOrderFilledCommand> {

@@ -16,6 +16,7 @@ export interface IDailyProfitLossTracker extends IProfitLossTracker {
   date: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isDailyProfitLossTracker(tracker: any): tracker is IDailyProfitLossTracker {
   return (tracker as IDailyProfitLossTracker).date !== undefined;
 }
